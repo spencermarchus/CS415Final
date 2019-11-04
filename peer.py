@@ -53,7 +53,15 @@ class Peer:
 
         # get list of all active peers from server
 
-        # iterate over peers and send the image
+        # iterate over peers and send the image in separate threads
+
+        pass
+
+    def broadcast_string(self, string):
+
+        # get list of all active peers from server
+
+        # spawn threads to send strings to all peers
 
         pass
 

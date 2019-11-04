@@ -14,11 +14,12 @@ port = 9999
 # only one thread can modify the dict at one time
 
 
-class Peer:
+class User:
 
-    def __init__(self, ip, port):
+    def __init__(self, ip, port_no, name):
+        self.nickname = name
         self.ip = ip
-        self.port = port
+        self.port = port_no
         self.timestamp = datetime.datetime  # current date and time
 
 
@@ -54,10 +55,15 @@ class Server:
             d.setDaemon(True)
             d.start()
 
+
     # this would get called whenever a client pings the server to tell it that it's alive
     def update_peer(self, client_info):
         # acquire lock to make sure we don't corrupt dict - this runs in little time, no expected perf impact
         self.client_dict_lock.acquire()
+
+        # if user is unknown, add them to the list all the same
+
+        # again, if user is unknown, respond with OK message telling user they have connected
 
         try:
             ip_addr = client_info['IP']
@@ -66,9 +72,7 @@ class Server:
             index = ip_addr + ':' + str(port_no)
 
             # client dict will be indexed by "IP:port_no" - replace with a new Peer object with current timestamp
-            self.clients[index] = Peer(ip_addr, port_no)
-
-
+            self.clients[index] = User(ip_addr, port_no)
 
         finally:
             # release lock
@@ -90,6 +94,7 @@ class Server:
         finally:
 
             self.client_dict_lock.release()
+
 
     def server_thread(self, clientSocket, client_addr):
         print('thread started')
