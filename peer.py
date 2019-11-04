@@ -12,6 +12,9 @@ class Peer:
 
         self.port = config["PORT_NO"]
 
+        self.server_ip = config["SERVER_IP"]
+        self.server_host = config["SERVER_PORT"]
+
         # Create a TCP socket
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -21,15 +24,22 @@ class Peer:
         # bind the socket to a public host, and a port
         self.serverSocket.bind((host, self.port))
 
-        # connect to central server
+        self.serverSocket.listen(10)
+
+        # TODO - ping central server periodically
+        keep_alive = threading.Thread(name='keep_alive', target = self.ping_server_periodically(), args=())
+        keep_alive.setDaemon(True)
+        keep_alive.start()
 
         while True:
+            # handle incoming connections
+
             # Establish the connection
             (clientSocket, client_address) = self.serverSocket.accept()
 
             d = threading.Thread(name='client',
                                  target=self.peer_thread, args=(clientSocket, client_address))
-            d.setDaemon(True)
+            d.setDaemon(True) # can run in background
             d.start()
 
 
@@ -45,4 +55,8 @@ class Peer:
 
         # iterate over peers and send the image
 
+        pass
+
+    # ping the server every 30 seconds to maintain alive status
+    def ping_server_periodically(self):
         pass

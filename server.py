@@ -39,7 +39,7 @@ class Server:
         # bind the socket to a public host, and a port
         self.serverSocket.bind((host, port))
 
-        self.serverSocket.listen(500)  # become a server socket
+        self.serverSocket.listen(50)  # become a server socket
         self.clients = {}
 
         # start a thread which periodically checks the list of peers to ensure they are active
