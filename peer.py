@@ -10,12 +10,12 @@ class Peer:
 
     def __init__(self, config):
 
-        self.port = config["PORT_NO"]
+        self.port = config["LOCAL_PORT_NO"]
 
         self.server_ip = config["SERVER_IP"]
         self.server_host = config["SERVER_PORT"]
 
-        # Create a TCP socket
+        # Create a TCP socket to listen for connections
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # Re-use the socket
@@ -59,4 +59,16 @@ class Peer:
 
     # ping the server every 30 seconds to maintain alive status
     def ping_server_periodically(self):
-        pass
+        start = time.time()
+
+        while True:
+
+            # open socket to server
+
+            # send a ping message to tell server we are alive
+
+            # close connection
+
+            # wait 30 seconds and do it again forever
+
+            pass
