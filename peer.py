@@ -27,7 +27,7 @@ class Peer:
         self.serverSocket.listen(10)
 
         # TODO - ping central server periodically
-        keep_alive = threading.Thread(name='keep_alive', target = self.ping_server_periodically(), args=())
+        keep_alive = threading.Thread(name='keep_alive', target = self.ping_server_periodically, args=())
         keep_alive.setDaemon(True)
         keep_alive.start()
 
