@@ -62,13 +62,14 @@ class Peer:
         start = time.time()
 
         while True:
-
-            # open socket to server
+            start = time.time()
+            # open socket to server and ensure timeout << 30 seconds
 
             # send a ping message to tell server we are alive
 
             # close connection
 
-            # wait 30 seconds and do it again forever
+            # wait about 30 seconds and do it again forever
+            end = time.time()
+            time.sleep(30-(end-start))
 
-            pass
