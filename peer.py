@@ -4,7 +4,7 @@ import datetime
 import time
 
 host = '127.0.0.1'
-port = 6666
+
 
 class Peer:
 
@@ -19,7 +19,7 @@ class Peer:
         self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # bind the socket to a public host, and a port
-        self.serverSocket.bind((host, port))
+        self.serverSocket.bind((host, self.port))
 
         # connect to central server
 
