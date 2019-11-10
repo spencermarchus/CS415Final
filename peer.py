@@ -2,6 +2,7 @@ import socket
 import threading
 import datetime
 import time
+import _pickle as pickle
 
 host = '127.0.0.1'
 
@@ -13,7 +14,7 @@ class Peer:
         self.port = config["LOCAL_PORT_NO"]
 
         self.server_ip = config["SERVER_IP"]
-        self.server_host = config["SERVER_PORT"]
+        self.server_host = config["LOCAL_SERVER_PORT"]
 
         # Create a TCP socket to listen for connections
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -72,12 +73,28 @@ class Peer:
         while True:
             start = time.time()
             # open socket to server and ensure timeout << 30 seconds
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            s.connect((self.server_ip, self.server_host))
+
+            print('Connected to server')
+
+            msg = {'type': 'KEEP_ALIVE', 'port':self.port}
+
+            # pickle the dict and send it
+            s.send(pickle.dumps(msg))
+            s.close()
 
             # send a ping message to tell server we are alive
 
             # close connection
 
-            # wait about 30 seconds and do it again forever
+            # wait about 15 seconds and do it again forever
             end = time.time()
-            time.sleep(30-(end-start))
+            time.sleep(15-(end-start))
+
+
+cfg = {"LOCAL_PORT_NO": 4444, "SERVER_IP": '127.0.0.1', "LOCAL_SERVER_PORT": 9999}
+
+peer = Peer(cfg)
 
