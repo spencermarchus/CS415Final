@@ -32,6 +32,11 @@ class Peer:
         keep_alive.setDaemon(True)
         keep_alive.start()
 
+
+        time.sleep(2)
+
+        self.broadcast_string('REE')
+
         while True:
             # handle incoming connections
 
@@ -61,6 +66,22 @@ class Peer:
     def broadcast_string(self, string):
 
         # get list of all active peers from server
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.server_ip, self.server_host))
+        print('Connected to server, requesting list of peers')
+
+        request_dict = {'type':'REQUEST_PEER_DICT'}
+
+        data = pickle.dumps(request_dict)
+
+        s.send(data)
+
+        ret_val = s.recv(4096)
+
+        return_data = pickle.loads(ret_val)
+
+        print("RECEIVED CLIENT DICT FROM SERVER. . .")
+        print(return_data)
 
         # spawn threads to send strings to all peers
 
@@ -68,7 +89,6 @@ class Peer:
 
     # ping the server every 30 seconds to maintain alive status
     def ping_server_periodically(self):
-        start = time.time()
 
         while True:
             start = time.time()
@@ -79,9 +99,9 @@ class Peer:
 
             print('Connected to server')
 
-            msg = {'type': 'KEEP_ALIVE', 'port':self.port}
+            msg = {'type': 'KEEP_ALIVE', 'port':self.port, 'nickname':'Spencer'}
 
-            # pickle the dict and send it
+            # pickle the dict and send it to server
             s.send(pickle.dumps(msg))
             s.close()
 

@@ -70,6 +70,7 @@ class Server:
         try:
             ip_addr = client_info['IP']
             port_no = client_info['PORT_NO']
+            nickname = client_info['nickname']
 
             index = ip_addr + ':' + str(port_no)
 
@@ -77,7 +78,7 @@ class Server:
             self.client_dict_lock.acquire()
 
             # client dict will be indexed by "IP:port_no" - replace with a new Peer object with current timestamp
-            self.clients[index] = User(ip_addr, port_no, ip_addr)
+            self.clients[index] = User(ip_addr, port_no, nickname)
 
             print('Peer updated successfully!')
             print(self.clients)
@@ -91,13 +92,19 @@ class Server:
 
         self.client_dict_lock.acquire()
 
-        str_clients = 'PEERLIST;'
+        return_list = []
 
         try:
             for key in self.clients:
-                str_clients += key + ';'
+                user = self.clients[key]
+                ip = user.ip
+                port = user.port
+                name = user.nickname
+                return_list.append({'ip':ip,'port':port,'name':name})
 
-            # send string to peer's socket
+            # send dict to peer's socket
+            response = pickle.dumps(return_list)
+            peer_socket.send(response)
 
         finally:
 
@@ -110,24 +117,33 @@ class Server:
         # get the request from browser
         data = clientSocket.recv(4096)
 
-        data_loaded = pickle.loads(data)
+        info = pickle.loads(data)
         # str_data = data.decode()
 
         # the connected client's IP addr
-        host, port = clientSocket.getpeername()
+        h, p = clientSocket.getpeername()
 
         print('Message from client: ')
-        print(data_loaded)
+        print(info)
 
-        if data_loaded['type'] == 'KEEP_ALIVE':
-            client_info = {'IP': host, 'PORT_NO': data_loaded['port']}
+        req_type = info['type']
+
+        if req_type == 'KEEP_ALIVE':
+            # update the time which we have last seen this client
+            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname':info['nickname']}
             self.update_peer(client_info)
+
+        if req_type == 'REQUEST_PEER_DICT':
+
+            # respond with directory of all active clients
+            self.send_list_of_all_peers_to_peer(clientSocket)
 
 
         # do something with the info
 
         # if request is to update a client's last seen time, do that
 
+        clientSocket.close()
         pass
 
     # this is meant to be a thread that runs indefinitely
@@ -151,7 +167,7 @@ class Server:
 
                     # if client has not pinged in last X time, remove from client list
                     timedelta = datetime.datetime.now() - self.clients[key].timestamp
-                    print(timedelta)
+
                     if timedelta > datetime.timedelta(minutes=self.CLIENT_TIMEOUT_MINS):  # remove this peer from active list
                         print('REMOVING peer ' +str(key)+' from directory due to inactivity')
                         indices_to_remove.append(key)
