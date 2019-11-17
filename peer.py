@@ -2,6 +2,7 @@ import socket
 import threading
 import datetime
 import time
+import _pickle as pickle
 
 host = '127.0.0.1'
 
@@ -13,7 +14,7 @@ class Peer:
         self.port = config["LOCAL_PORT_NO"]
 
         self.server_ip = config["SERVER_IP"]
-        self.server_host = config["SERVER_PORT"]
+        self.server_host = config["LOCAL_SERVER_PORT"]
 
         # Create a TCP socket to listen for connections
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -30,6 +31,11 @@ class Peer:
         keep_alive = threading.Thread(name='keep_alive', target = self.ping_server_periodically, args=())
         keep_alive.setDaemon(True)
         keep_alive.start()
+
+
+        time.sleep(2)
+
+        self.broadcast_string('REE')
 
         while True:
             # handle incoming connections
@@ -60,6 +66,22 @@ class Peer:
     def broadcast_string(self, string):
 
         # get list of all active peers from server
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.server_ip, self.server_host))
+        print('Connected to server, requesting list of peers')
+
+        request_dict = {'type':'REQUEST_PEER_DICT'}
+
+        data = pickle.dumps(request_dict)
+
+        s.send(data)
+
+        ret_val = s.recv(4096)
+
+        return_data = pickle.loads(ret_val)
+
+        print("RECEIVED CLIENT DICT FROM SERVER. . .")
+        print(return_data)
 
         # spawn threads to send strings to all peers
 
@@ -67,17 +89,32 @@ class Peer:
 
     # ping the server every 30 seconds to maintain alive status
     def ping_server_periodically(self):
-        start = time.time()
 
         while True:
             start = time.time()
             # open socket to server and ensure timeout << 30 seconds
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            s.connect((self.server_ip, self.server_host))
+
+            print('Connected to server')
+
+            msg = {'type': 'KEEP_ALIVE', 'port':self.port, 'nickname':'Spencer'}
+
+            # pickle the dict and send it to server
+            s.send(pickle.dumps(msg))
+            s.close()
 
             # send a ping message to tell server we are alive
 
             # close connection
 
-            # wait about 30 seconds and do it again forever
+            # wait about 15 seconds and do it again forever
             end = time.time()
-            time.sleep(30-(end-start))
+            time.sleep(15-(end-start))
+
+
+cfg = {"LOCAL_PORT_NO": 4444, "SERVER_IP": '127.0.0.1', "LOCAL_SERVER_PORT": 9999}
+
+peer = Peer(cfg)
 
