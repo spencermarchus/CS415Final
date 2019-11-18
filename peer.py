@@ -11,7 +11,6 @@ class Peer:
 
     def __init__(self, config):
 
-        global client_dict
         self.port = config["LOCAL_PORT_NO"]
 
         self.server_ip = config["SERVER_IP"]
@@ -60,13 +59,14 @@ class Peer:
 
         data_loaded = pickle.loads(data)
 
-        print('Message from client: ')
-        print(data_loaded)
-
         if data_loaded['type'] == 'IMAGE':
             img = data_loaded['data']
             with open('tst' + str(self.port) + '.png', 'wb') as image:
                 image.write(img)
+            print("Message Recieved: " + 'tst' + str(self.port) + ".png From " + data_loaded['sender'])
+
+        if data_loaded['type'] == "MESSAGE":
+            print("Message Recieved: " + data_loaded['data'] + " From: " + data_loaded['sender'])
 
 
     # send an image to all peers
@@ -78,17 +78,18 @@ class Peer:
             pass
 
         # get list of all active peers from server
-        self.get_active_peers()
+        client_dict = self.get_active_peers()
 
         # iterate over peers and send the image in separate threads
         for p in client_dict:
-            IP = p.get("ip")
-            port = p.get("port")
-            sender = p.get("name")
-            d = threading.Thread(name='client',
-                                 target=self.send_image, args=(IP, port, img, sender))
-            d.setDaemon(True)  # can run in background
-            d.start()
+            if p.get("port") != self.port:
+                IP = p.get("ip")
+                port = p.get("port")
+                sender = p.get("name")
+                d = threading.Thread(name='client',
+                                     target=self.send_image, args=(IP, port, img, sender))
+                d.setDaemon(True)  # can run in background
+                d.start()
 
     def send_image(self, IP, port, img, sender):
         img_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -96,40 +97,40 @@ class Peer:
 
         print('Connected to Peer: ' + sender)
 
-        msg = {'type': 'IMAGE', 'port': self.port, 'data': img, 'sender': sender}
+        msg = {'type': 'IMAGE', 'data': img, 'sender': sender}
 
         # pickle the dict and send it
         img_s.send(pickle.dumps(msg))
         img_s.close()
 
-    def get_active_peers(self):
-        # get list of all active peers from server
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.server_ip, self.server_host))
-        print('Connected to server, requesting list of peers')
 
-        request_dict = {'type': 'REQUEST_PEER_DICT'}
+    def broadcast_string(self, message):
+        # get updated client dict
+        self.get_active_peers()
 
-        data = pickle.dumps(request_dict)
+        client_dict = self.get_active_peers()
 
-        s.send(data)
+        for p in client_dict:
+            if p.get("port") != self.port:
+                IP = p.get("ip")
+                port = p.get("port")
+                sender = p.get("name")
+                # spawn threads to send strings to all peers
+                d = threading.Thread(name='client',
+                                     target=self.send_chat, args=(IP, port, message, sender))
+                d.setDaemon(True)  # can run in background
+                d.start()
 
-        ret_val = s.recv(4096)
+    def send_chat(self, IP, port, message, sender):
+        msg_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        msg_s.connect((IP, port))
+        print('Connected to Peer: ' + sender)
+        print('Sent message: ' + message)
+        msg = {'type': 'MESSAGE', 'data': message, 'sender': sender}
+        # pickle the dict and send it
+        msg_s.send(pickle.dumps(msg))
+        msg_s.close()
 
-        return_data = pickle.loads(ret_val)
-
-        print("RECEIVED CLIENT DICT FROM SERVER. . .")
-        print(return_data)
-        global client_dict
-        client_dict = return_data
-
-    def broadcast_string(self, string):
-
-
-
-        # spawn threads to send strings to all peers
-
-        pass
 
     # ping the server every 30 seconds to maintain alive status
     def ping_server_periodically(self):
@@ -157,8 +158,27 @@ class Peer:
             end = time.time()
             time.sleep(15-(end-start))
 
+    def get_active_peers(self):
+        # get list of all active peers from server
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.server_ip, self.server_host))
+        print('Connected to server, requesting list of peers')
 
-cfg = {"LOCAL_PORT_NO": 5555, "SERVER_IP": '127.0.0.1', "LOCAL_SERVER_PORT": 9999}
+        request_dict = {'type': 'REQUEST_PEER_DICT'}
+
+        data = pickle.dumps(request_dict)
+
+        s.send(data)
+
+        ret_val = s.recv(4096)
+
+        return_data = pickle.loads(ret_val)
+
+        print("RECEIVED CLIENT DICT FROM SERVER. . .")
+        print(return_data)
+        return return_data
+
+cfg = {"LOCAL_PORT_NO": 4444, "SERVER_IP": '127.0.0.1', "LOCAL_SERVER_PORT": 9999}
 
 peer = Peer(cfg)
 
