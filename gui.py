@@ -33,8 +33,10 @@ def paint(e):
 #method to select color
 def newColor():
     global color
-    color = colorchooser.askcolor()
-    colorCanvas.config(bg = color[1])
+    colors = colorchooser.askcolor()
+    colorCanvas.config(bg = colors[1])
+    color = colors[1]
+    print(colors[1])
 
 #flashing for messages button
 flash_delay = 750
