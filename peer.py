@@ -3,19 +3,42 @@ import threading
 import datetime
 import time
 import _pickle as pickle
+import gui
+
+# imports
+import tkinter as tk
+import tkinter.colorchooser as colorchooser
+from tkinter import *
 
 host = '127.0.0.1'
 
 
-class Peer:
+class Peer(threading.Thread):
 
     def __init__(self, config):
+
+        super(Peer, self).__init__()
 
         self.port = config["LOCAL_PORT_NO"]
 
         self.server_ip = config["SERVER_IP"]
-        self.server_host = config["LOCAL_SERVER_PORT"]
+        self.server_port = config["SERVER_PORT"]
 
+
+
+
+        keep_alive = threading.Thread(name='keep_alive', target = self.ping_server_periodically, args=())
+        keep_alive.setDaemon(True)
+        keep_alive.start()
+
+
+        time.sleep(2)
+
+        # self.broadcast_string('REE')
+        # self.broadcast_image("placeholder")
+
+
+    def run(self):
         # Create a TCP socket to listen for connections
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -27,17 +50,6 @@ class Peer:
 
         self.serverSocket.listen(10)
 
-
-        keep_alive = threading.Thread(name='keep_alive', target = self.ping_server_periodically, args=())
-        keep_alive.setDaemon(True)
-        keep_alive.start()
-
-
-        time.sleep(2)
-
-        self.broadcast_string('REE')
-        self.broadcast_image("placeholder")
-
         while True:
             # handle incoming connections
 
@@ -46,7 +58,7 @@ class Peer:
 
             d = threading.Thread(name='client',
                                  target=self.peer_thread, args=(clientSocket, client_address))
-            d.setDaemon(True) # can run in background
+            d.setDaemon(True) # can run in background, will not prevent program from closing
             d.start()
 
 
@@ -140,7 +152,7 @@ class Peer:
             # open socket to server and ensure timeout << 30 seconds
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            s.connect((self.server_ip, self.server_host))
+            s.connect((self.server_ip, self.server_port))
 
             print('Connected to server')
 
@@ -161,7 +173,7 @@ class Peer:
     def get_active_peers(self):
         # get list of all active peers from server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.server_ip, self.server_host))
+        s.connect((self.server_ip, self.server_port))
         print('Connected to server, requesting list of peers')
 
         request_dict = {'type': 'REQUEST_PEER_DICT'}
@@ -178,7 +190,23 @@ class Peer:
         print(return_data)
         return return_data
 
-cfg = {"LOCAL_PORT_NO": 4444, "SERVER_IP": '127.0.0.1', "LOCAL_SERVER_PORT": 9999}
+cfg = {"LOCAL_PORT_NO": 4444, "SERVER_IP": '127.0.0.1', "SERVER_PORT": 9999}
 
-peer = Peer(cfg)
+p = Peer(cfg)
+p.setDaemon(True) # allows use of CTRL+C to exit program
+
+# Peer object/thread created - now instantiate GUI
+
+gui = gui.Canvas_GUI_Wrapper(p)
+gui.setDaemon(True)
+
+# GUI now created - TODO - point GUI callbacks at Peer methods
+
+# Start peer / GUI threads
+p.start()
+gui.start()
+
+# Prevent our main thread from exiting, since all other methods are daemonic
+while True:
+    time.sleep(100)
 

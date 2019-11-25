@@ -21,12 +21,14 @@ class User:
         self.nickname = name
         self.ip = ip
         self.port = port_no
-        self.timestamp = datetime.datetime.now() # current date and time
+        self.timestamp = datetime.datetime.now()  # current date and time
 
 
-class Server:
+class Server(threading.Thread):
 
     def __init__(self, config={}):
+
+        super(Server, self).__init__()
 
         self.CLIENT_TIMEOUT_MINS = 2
 
@@ -44,6 +46,8 @@ class Server:
         self.serverSocket.listen(50)  # become a server socket
         self.clients = {}
 
+    def run(self):
+
         # start a thread which periodically checks the list of peers to ensure they are active
         threading.Thread(target=self.prune_dict_thread).start()
 
@@ -58,10 +62,8 @@ class Server:
             d.setDaemon(True)
             d.start()
 
-
     # this would get called whenever a client pings the server to tell it that it's alive
     def update_peer(self, client_info):
-
 
         # if user is unknown, add them to the list all the same
 
@@ -100,7 +102,7 @@ class Server:
                 ip = user.ip
                 port = user.port
                 name = user.nickname
-                return_list.append({'ip':ip,'port':port,'name':name})
+                return_list.append({'ip': ip, 'port': port, 'name': name})
 
             # send dict to peer's socket
             response = pickle.dumps(return_list)
@@ -109,7 +111,6 @@ class Server:
         finally:
 
             self.client_dict_lock.release()
-
 
     def server_thread(self, clientSocket, client_addr):
         print('Handling client connection. . .')
@@ -130,14 +131,12 @@ class Server:
 
         if req_type == 'KEEP_ALIVE':
             # update the time which we have last seen this client
-            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname':info['nickname']}
+            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname']}
             self.update_peer(client_info)
 
         if req_type == 'REQUEST_PEER_DICT':
-
             # respond with directory of all active clients
             self.send_list_of_all_peers_to_peer(clientSocket)
-
 
         # do something with the info
 
@@ -150,32 +149,28 @@ class Server:
     # in general, loop approximately every few seconds and remove peer if a given peer is not active
     def prune_dict_thread(self):
 
-
-        try:
-            while True:
-
+        while True:
+            try:
                 start = time.time()
 
                 # list of dict keys to remove
                 indices_to_remove = []
 
-
                 self.client_dict_lock.acquire()
-
 
                 for key in self.clients:
 
                     # if client has not pinged in last X time, remove from client list
                     timedelta = datetime.datetime.now() - self.clients[key].timestamp
 
-                    if timedelta > datetime.timedelta(minutes=self.CLIENT_TIMEOUT_MINS):  # remove this peer from active list
-                        print('REMOVING peer ' +str(key)+' from directory due to inactivity')
+                    if timedelta > datetime.timedelta(
+                            minutes=self.CLIENT_TIMEOUT_MINS):  # remove this peer from active list
+                        print('REMOVING peer ' + str(key) + ' from directory due to inactivity')
                         indices_to_remove.append(key)
 
                 # delete clients that need to get deleted
                 for key in indices_to_remove:
                     del self.clients[key]
-
 
                 self.client_dict_lock.release()
 
@@ -185,8 +180,15 @@ class Server:
 
                 time.sleep(seconds_to_sleep)
 
-        except Exception as e:
-            print(e)
+            except Exception as e:
+                print(e)
+                continue  # try again
+
 
 # start server
 s = Server()
+s.setDaemon(True)  # allows use of CTRL+C to exit program
+s.start()
+
+while True:
+    time.sleep(.1)

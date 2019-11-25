@@ -1,105 +1,123 @@
-#imports
+# imports
 import tkinter as tk
-import tkinter.colorchooser
+import tkinter.colorchooser as colorchooser
 from tkinter import *
 import sys
 
-
-#methods
-#update brush size from slider
-def updateSize(val):
-    global selectedWidth
-    selectedWidth = w1.get()
-
-#method to start painting
-def startPaint(e):
-    global lastX, lastY
-    canvas.bind('<B1-Motion>', paint)
-    lastX = e.x
-    lastY = e.y
+import threading
 
 
-#method to perform painting
-def paint(e):
-    global lastX, lastY, selectedWidth, color
-    updateSize(None)
-    x = e.x
-    y = e.y
-    canvas.create_line((lastX, lastY, x, y), width = selectedWidth, fill = color)
-    lastX = x
-    lastY = y
+class Canvas_GUI_Wrapper(threading.Thread):
 
+    # methods
+    # update brush size from slider
+    def updateSize(self, val):
+        self.selectedWidth = self.w1.get()
 
-#method to select color
-def newColor():
-    global color
-    color = colorchooser.askcolor()
-    colorCanvas.config(bg = color[1])
+    # method to start painting
+    def startPaint(self, e):
+        self.canvas.bind('<B1-Motion>', self.paint)
+        self.lastX = e.x
+        self.lastY = e.y
 
-#flashing for messages button
-flash_delay = 750
-bg_flash_colors = ("white", "red")
-fg_flash_colors = ("black", "white")
-def flashColor(object, color_index):
-    object.config(background = bg_flash_colors[color_index])
-    object.config(foreground = fg_flash_colors[color_index])
-    root.after(flash_delay, flashColor, object, 1 - color_index)
-root = tk.Tk()
-root.withdraw()
+    # method to perform painting
+    def paint(self, e):
+        self.updateSize(None)
+        x = e.x
+        y = e.y
+        self.canvas.create_line((self.lastX, self.lastY, x, y), width=self.selectedWidth, fill=self.color[1])
+        self.lastX = x
+        self.lastY = y
 
-#leave chatroom
-def leaveChat():
-    #leave the chatroom by letting server know you are exiting
-    quit()
+    # method to select color
+    def newColor(self):
+        self.color = colorchooser.askcolor()
+        self.colorCanvas.config(bg=self.color[1])
 
-#create our gui
-gui = tk.Tk()
-gui.title('PictoChat The Rebirth')
-gui.minsize(1200, 610)
-#default color
-color = "pink"
+    def flashColor(self, object, color_index):
+        object.config(background=self.bg_flash_colors[color_index])
+        object.config(foreground=self.fg_flash_colors[color_index])
+        self.root.after(self.flash_delay, self.flashColor, object, 1 - color_index)
 
-#populate our gui
-#canvas object
-canvas = Canvas(gui, bg = "gray", width = 960, height = 590)
-canvas.place(x = 10, y = 10)
-#buttons
-#send button
-button1 = tk.Button(gui, text = "Send Message", width =28, height = 8, fg = "green", activeforeground = "green")
-button1.place(x = 980, y = 425)
-#leave button
-button2 = tk.Button(gui, text = "Leave Chat Room", width = 28, height = 2, fg = "red", activeforeground = "red", command = leaveChat)
-button2.place(x = 980, y = 560)
-#incoming messages button
-button3 = tk.Button(gui, text = "Incoming Messages", width = 28, height = 4, activebackground = "red", activeforeground = "white")
-button3.place(x = 980, y =13)
-#select color button
-button4 = tk.Button(gui, text = "Select A New Color", width = 28, height = 3, command= newColor)
-button4.place(x = 980, y = 325)
-#selected color display label
-label1 = Label(gui, text = "Current Color")
-label1.place(x = 1040, y= 240)
-#label for brush size
-label2 = Label(gui, text = "Brush Size")
-label2.place(x = 1050, y = 100)
-#selected color display viewable color
-colorCanvas = Canvas(gui, bg = color, width = 203, height = 50)
-colorCanvas.place(x = 980, y = 260)
-#slider for size
-w1 = Scale(gui, from_ = 1, to_ = 50, length = 200, orient = HORIZONTAL, command = updateSize)
-w1.set(5)
-w1.place(x = 980, y= 115)
+    # leave chatroom
+    def leaveChat(self):
+        # leave the chatroom by letting server know you are exiting
+        quit()
 
-#if we have messages run this line
-flashColor(button3, 0)
+    # this method is honestly disgusting but it needs to be this way
+    def __init__(self, peer):
+        # call threading.Thread init because otherwise it just crashes (?)
+        super(Canvas_GUI_Wrapper, self).__init__()
 
-#data for drawing
-lastX, lastY = None,None
-canvas.bind('<1>', startPaint)
-#size
-selectedWidth = w1.get()
+        self.lastX = 0
+        self.lastY = 0
+        self.color = None
+        self.selectedWidth = None
 
+        # maintain peer reference
+        self.peer = peer
 
+    # override the run method of Thread... readability of this is horrible, but we have to create all these instance
+    # variables variables in run() to avoid errors inherent to Tkinter and threading
+    def run(self):
+        # flashing for messages button
+        self.flash_delay = 750
+        self.bg_flash_colors = ("white", "red")
+        self.fg_flash_colors = ("black", "white")
 
-#run our gui
-gui.mainloop()
+        self.root = tk.Tk()
+        self.root.withdraw()
+
+        # create our gui
+        self.gui = tk.Tk()
+        self.gui.title('PictoChat The Rebirth')
+        self.gui.minsize(1200, 610)
+
+        # default color
+        self.color = [' ', 'pink']
+
+        # populate our gui
+        # canvas object
+        self.canvas = Canvas(self.gui, bg="gray", width=960, height=590)
+        self.canvas.place(x=10, y=10)
+        # buttons
+        # send button
+        self.button1 = tk.Button(self.gui, text="Send Message", width=28, height=8, fg="green",
+                                 activeforeground="green")
+        self.button1.place(x=980, y=425)
+        # leave button
+        self.button2 = tk.Button(self.gui, text="Leave Chat Room", width=28, height=2, fg="red", activeforeground="red",
+                                 command=self.leaveChat)
+        self.button2.place(x=980, y=560)
+        # incoming messages button
+        self.button3 = tk.Button(self.gui, text="Incoming Messages", width=28, height=4, activebackground="red",
+                                 activeforeground="white")
+        self.button3.place(x=980, y=13)
+        # select color button
+        self.button4 = tk.Button(self.gui, text="Select A New Color", width=28, height=3, command=self.newColor)
+        self.button4.place(x=980, y=325)
+        # selected color display label
+        self.label1 = Label(self.gui, text="Current Color")
+        self.label1.place(x=1040, y=240)
+        # label for brush size
+        self.label2 = Label(self.gui, text="Brush Size")
+        self.label2.place(x=1050, y=100)
+        # selected color display viewable color
+        self.colorCanvas = Canvas(self.gui, bg=self.color[1], width=203, height=50)
+        self.colorCanvas.place(x=980, y=260)
+        # slider for size
+        self.w1 = Scale(self.gui, from_=1, to_=50, length=200, orient=HORIZONTAL, command=self.updateSize)
+        self.w1.set(5)
+        self.w1.place(x=980, y=115)
+
+        # if we have messages run this line
+        self.flashColor(self.button3, 0)
+
+        # data for drawing
+        self.lastX, self.lastY = None, None
+        self.canvas.bind('<1>', self.startPaint)
+        # size
+        self.selectedWidth = self.w1.get()
+
+        # run our gui
+        self.gui.mainloop()
