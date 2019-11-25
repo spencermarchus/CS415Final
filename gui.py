@@ -121,3 +121,4 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
         # run our gui
         self.gui.mainloop()
+
