@@ -4,11 +4,8 @@ import datetime
 import time
 import _pickle as pickle
 import gui
+import gui2
 
-# imports
-import tkinter as tk
-import tkinter.colorchooser as colorchooser
-from tkinter import *
 
 host = '127.0.0.1'
 
@@ -24,13 +21,13 @@ class Peer(threading.Thread):
         self.server_ip = config["SERVER_IP"]
         self.server_port = config["SERVER_PORT"]
 
-
-
+        self.images_received = []
 
         keep_alive = threading.Thread(name='keep_alive', target = self.ping_server_periodically, args=())
         keep_alive.setDaemon(True)
         keep_alive.start()
 
+        self.peer_list_lock = threading.Lock()
 
         time.sleep(2)
 
@@ -200,11 +197,15 @@ p.setDaemon(True) # allows use of CTRL+C to exit program
 gui = gui.Canvas_GUI_Wrapper(p)
 gui.setDaemon(True)
 
+gui2 = gui2.Image_Display_GUI(p)
+gui2.setDaemon(True)
+
 # GUI now created - TODO - point GUI callbacks at Peer methods
 
 # Start peer / GUI threads
 p.start()
 gui.start()
+gui2.start()
 
 # Prevent our main thread from exiting, since all other methods are daemonic
 while True:
