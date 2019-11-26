@@ -190,15 +190,15 @@ class Peer(threading.Thread):
 cfg = {"LOCAL_PORT_NO": 4444, "SERVER_IP": '127.0.0.1', "SERVER_PORT": 9999}
 
 p = Peer(cfg)
-# p.setDaemon(True) # allows use of CTRL+C to exit program
+p.setDaemon(True) # allows use of CTRL+C to exit program
 
 # Peer object/thread created - now instantiate GUI
 
 gui = gui.Canvas_GUI_Wrapper(p)
-# gui.setDaemon(True)
+gui.setDaemon(True)
 
 gui2 = gui2.Image_Display_GUI(p)
-# gui2.setDaemon(True)
+gui2.setDaemon(True)
 
 # GUI now created - TODO - point GUI callbacks at Peer methods
 

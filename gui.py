@@ -10,6 +10,10 @@ import threading
 class Canvas_GUI_Wrapper(threading.Thread):
 
     # methods
+    #method to clear the canvas
+    def clearCanvas(self):
+        self.canvas.delete("all")
+
     # update brush size from slider
     def updateSize(self, val):
         self.selectedWidth = self.w1.get()
@@ -72,6 +76,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.gui = tk.Tk()
         self.gui.title('PictoChat The Rebirth')
         self.gui.minsize(1200, 610)
+        self.gui.maxsize(1200, 610)
 
         # default color
         self.color = [' ', 'pink']
@@ -95,20 +100,23 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.button3.place(x=980, y=13)
         # select color button
         self.button4 = tk.Button(self.gui, text="Select A New Color", width=28, height=3, command=self.newColor)
-        self.button4.place(x=980, y=325)
+        self.button4.place(x=980, y=255)
         # selected color display label
         self.label1 = Label(self.gui, text="Current Color")
-        self.label1.place(x=1040, y=240)
+        self.label1.place(x=1040, y=170)
         # label for brush size
         self.label2 = Label(self.gui, text="Brush Size")
         self.label2.place(x=1050, y=100)
         # selected color display viewable color
         self.colorCanvas = Canvas(self.gui, bg=self.color[1], width=203, height=50)
-        self.colorCanvas.place(x=980, y=260)
+        self.colorCanvas.place(x=980, y=190)
         # slider for size
         self.w1 = Scale(self.gui, from_=1, to_=50, length=200, orient=HORIZONTAL, command=self.updateSize)
         self.w1.set(5)
         self.w1.place(x=980, y=115)
+        #clear button
+        self.button5 = tk.Button(self.gui, text="Clear Drawing", width=28, height=3, command=self.clearCanvas)
+        self.button5.place(x=980, y=320)
 
         # if we have messages run this line
         self.flashColor(self.button3, 0)

@@ -60,20 +60,43 @@ class Image_Display_GUI(threading.Thread):
         # create our gui
         self.gui = tk.Tk()
         self.gui.title('Messages Received')
-        self.gui.minsize(980, 700)
-        self.gui.maxsize(980, 700)
+        self.gui.minsize(1200, 610)
+        self.gui.maxsize(1200, 610)
 
         # populate our gui
         # canvas object
         self.canvas = Canvas(self.gui, bg="gray", width=960, height=590)
         self.canvas.place(x=10, y=10)
+
+        #label for the listbox
+        self.Label1 = Label(self.gui, text="Incoming Messages")
+        self.Label1.place(x=1025, y=10)
+        #listbox to store our given messages
+        self.Listbox = Listbox(self.gui, width=31, height=30)
+        self.Listbox.place(x=980, y= 48)
+        #scrollbar for listbox (unlikely its necessary but good for continuity)
+        self.Scrollbar1 = Scrollbar(self.gui, orient="vertical")
+        self.Scrollbar1.place(x=1175, y=48)
+        #button to delete an entry from the listbox
+        self.Button1 = Button(self.gui, text="Delete Message", width=28, height=3)
+        self.Button1.place(x=980, y=545)
+
+        #test fill listbox
+        for x in range(100):
+            self.Listbox.insert(END, str(x))
+
         # buttons
+
+
+
+        #placeholder buttons (these should be removed but i am keeping for safety
         # send button
-        self.button1 = tk.Button(self.gui, text="<<", width=10, height=2, fg="black", activeforeground="red")
-        self.button1.place(x=400, y=630)
+        #self.button1 = tk.Button(self.gui, text="<<", width=10, height=2, fg="black", activeforeground="red")
+        #self.button1.place(x=400, y=630)
         # leave button
-        self.button2 = tk.Button(self.gui, text=">>", width=10, height=2, fg="black", activeforeground="red")
-        self.button2.place(x=500, y=630)
+        #self.button2 = tk.Button(self.gui, text=">>", width=10, height=2, fg="black", activeforeground="red")
+        #self.button2.place(x=500, y=630)
+
 
         # start a thread which constantly watches Peer object for new messages received
 

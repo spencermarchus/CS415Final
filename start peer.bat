@@ -1,2 +1,2 @@
-python peer.py
+python3 peer.py
 pause
