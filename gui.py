@@ -1,16 +1,18 @@
 # imports
+import io
 import tkinter as tk
 import tkinter.colorchooser as colorchooser
 from tkinter import *
+from mttkinter import mtTkinter
 import sys
-
+from PIL import ImageGrab, Image
 import threading
 
 
 class Canvas_GUI_Wrapper(threading.Thread):
 
     # methods
-    #method to clear the canvas
+    # method to clear the canvas
     def clearCanvas(self):
         self.canvas.delete("all")
 
@@ -88,16 +90,17 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # buttons
         # send button
         self.button1 = tk.Button(self.gui, text="Send Message", width=28, height=8, fg="green",
-                                 activeforeground="green")
+                                 activeforeground="green", command=self.broadcast_canvas)
+
         self.button1.place(x=980, y=425)
         # leave button
         self.button2 = tk.Button(self.gui, text="Leave Chat Room", width=28, height=2, fg="red", activeforeground="red",
                                  command=self.leaveChat)
         self.button2.place(x=980, y=560)
-        # incoming messages button
-        self.button3 = tk.Button(self.gui, text="Incoming Messages", width=28, height=4, activebackground="red",
-                                 activeforeground="white")
-        self.button3.place(x=980, y=13)
+        # incoming messages button - commented out since, for now, the message viewing GUI comes up automatically
+        # self.button3 = tk.Button(self.gui, text="Incoming Messages", width=28, height=4, activebackground="red",
+        #                          activeforeground="white")
+        # self.button3.place(x=980, y=13)
         # select color button
         self.button4 = tk.Button(self.gui, text="Select A New Color", width=28, height=3, command=self.newColor)
         self.button4.place(x=980, y=255)
@@ -114,12 +117,12 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.w1 = Scale(self.gui, from_=1, to_=50, length=200, orient=HORIZONTAL, command=self.updateSize)
         self.w1.set(5)
         self.w1.place(x=980, y=115)
-        #clear button
+        # clear button
         self.button5 = tk.Button(self.gui, text="Clear Drawing", width=28, height=3, command=self.clearCanvas)
         self.button5.place(x=980, y=320)
 
         # if we have messages run this line
-        self.flashColor(self.button3, 0)
+        # self.flashColor(self.button3, 0)
 
         # data for drawing
         self.lastX, self.lastY = None, None
@@ -130,3 +133,22 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # run our gui
         self.gui.mainloop()
 
+    # can't have a threaded method as a command for a button, so create a thread to handle this in the background
+    def broadcast_canvas(self):
+        t = threading.Thread(target=self.broadcast_canvas_thread)
+        t.setDaemon(True)
+        t.start()
+
+    # take a screencap of the GUI (yes this is the best way I could find!) and broadcast the image to all peers in peer
+    def broadcast_canvas_thread(self):
+        x = self.gui.winfo_rootx() + self.canvas.winfo_x()
+        y = self.gui.winfo_rooty() + self.canvas.winfo_y()
+        x1 = x + self.canvas.winfo_width()
+        y1 = y + self.canvas.winfo_height()
+        # temporarily save image to disk
+        ImageGrab.grab().crop((x, y, x1, y1)).save("outgoing.png")
+
+        img_pointer = open('outgoing.png', mode='rb')
+
+        # tell peer to broadcast image with given file handle or "pointer" to file
+        self.peer.broadcast_image(img_pointer, self.peer.nickname)

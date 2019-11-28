@@ -1,2 +1,2 @@
-python3 peer.py
+python peer.py 4444 Spencer1
 pause

@@ -82,7 +82,7 @@ class Server(threading.Thread):
             # client dict will be indexed by "IP:port_no" - replace with a new Peer object with current timestamp
             self.clients[index] = User(ip_addr, port_no, nickname)
 
-            print('Peer updated successfully!')
+            print('\nPeer updated successfully!')
             print(self.clients)
 
         finally:
@@ -113,7 +113,7 @@ class Server(threading.Thread):
             self.client_dict_lock.release()
 
     def server_thread(self, clientSocket, client_addr):
-        print('Handling client connection. . .')
+        print('\nHandling client connection. . .')
 
         # get the request from browser
         data = clientSocket.recv(4096)
@@ -124,7 +124,7 @@ class Server(threading.Thread):
         # the connected client's IP addr
         h, p = clientSocket.getpeername()
 
-        print('Message from client: ')
+        print('\nMessage from client: ')
         print(info)
 
         req_type = info['type']
