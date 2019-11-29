@@ -1,11 +1,14 @@
+import os
 import socket
+import sys
 import threading
 import datetime
 import time
 import _pickle as pickle
 import gui
 import gui2
-
+import tkinter as tk
+from tkinter import *
 
 host = '127.0.0.1'
 
@@ -23,16 +26,16 @@ class Peer(threading.Thread):
 
         self.images_received = []
 
-        keep_alive = threading.Thread(name='keep_alive', target = self.ping_server_periodically, args=())
+        self.nickname = config['name']
+
+        keep_alive = threading.Thread(name='keep_alive', target=self.ping_server_periodically, args=())
         keep_alive.setDaemon(True)
         keep_alive.start()
 
         self.peer_list_lock = threading.Lock()
 
-        time.sleep(2)
-
-        # self.broadcast_string('REE')
-        # self.broadcast_image("placeholder")
+        # maintain a flag to keep track of whether or not we need to exit all threads (used to exit gracefully)
+        self.EXIT_FLAG = False
 
 
     def run(self):
@@ -55,39 +58,40 @@ class Peer(threading.Thread):
 
             d = threading.Thread(name='client',
                                  target=self.peer_thread, args=(clientSocket, client_address))
-            d.setDaemon(True) # can run in background, will not prevent program from closing
+            d.setDaemon(True)  # can run in background, will not prevent program from closing
             d.start()
-
 
     def peer_thread(self, client_sock, client_addr):
         # do stuff
         # generally, here we will handle receiving something like an image
         print('Handling message. . .')
 
-        data = client_sock.recv(4096)
+        data = client_sock.recv(512000)
 
         data_loaded = pickle.loads(data)
 
         if data_loaded['type'] == 'IMAGE':
             img = data_loaded['data']
-            with open('tst' + str(self.port) + '.png', 'wb') as image:
-                image.write(img)
-            print("Message Recieved: " + 'tst' + str(self.port) + ".png From " + data_loaded['sender'])
+            sender = data_loaded['sender']
+            # with open('tst' + str(self.port) + '.png', 'wb') as image:
+            #     image.write(img)
+            print("Image recieved from " + sender)
+            self.handle_image(img, sender)
 
         if data_loaded['type'] == "MESSAGE":
             print("Message Recieved: " + data_loaded['data'] + " From: " + data_loaded['sender'])
 
-
-    # send an image to all peers
-    def broadcast_image(self, img):
-        img = "/Users/mckennaobrien/Documents/My Pictures/Test.png"
-        try:
-            img = open(img, "rb").read()
-        except IOError:
-            pass
+    # send an image to all known peers
+    def broadcast_image(self, img_pointer, sender_name):
 
         # get list of all active peers from server
         client_dict = self.get_active_peers()
+
+        png = img_pointer.read(512000)
+
+        img_pointer.close()
+
+        # self.images_received.append((png, sender))
 
         # iterate over peers and send the image in separate threads
         for p in client_dict:
@@ -96,22 +100,31 @@ class Peer(threading.Thread):
                 port = p.get("port")
                 sender = p.get("name")
                 d = threading.Thread(name='client',
-                                     target=self.send_image, args=(IP, port, img, sender))
+                                     target=self.send_image, args=(IP, port, png, sender_name))
                 d.setDaemon(True)  # can run in background
                 d.start()
 
-    def send_image(self, IP, port, img, sender):
-        img_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        img_s.connect((IP, port))
+    def send_image(self, IP, port, png, sender_name):
+        try:
+            img_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            img_s.connect((IP, port))
 
-        print('Connected to Peer: ' + sender)
+            print('Connected to Peer: ' + sender_name)
 
-        msg = {'type': 'IMAGE', 'data': img, 'sender': sender}
+            msg = {'type': 'IMAGE', 'data': png, 'sender': sender_name}
 
-        # pickle the dict and send it
-        img_s.send(pickle.dumps(msg))
-        img_s.close()
+            # pickle the dict and send it
+            img_s.send(pickle.dumps(msg))
+            img_s.close()
 
+        except Exception as e:
+            print(e)
+            print('Could not make connection to peer!')
+
+    # simply append the image and its sender to our list in a tuple
+    # watcher threads in GUI handle the rest
+    def handle_image(self, png, sender):
+        self.images_received.append((png, sender))
 
     def broadcast_string(self, message):
         # get updated client dict
@@ -140,10 +153,9 @@ class Peer(threading.Thread):
         msg_s.send(pickle.dumps(msg))
         msg_s.close()
 
-
-    # ping the server every 30 seconds to maintain alive status
+    # ping the server every few seconds to maintain alive status
     def ping_server_periodically(self):
-
+        print('Pinging server. . .')
         while True:
             start = time.time()
             # open socket to server and ensure timeout << 30 seconds
@@ -151,21 +163,26 @@ class Peer(threading.Thread):
 
             s.connect((self.server_ip, self.server_port))
 
-            print('Connected to server')
-
-            msg = {'type': 'KEEP_ALIVE', 'port':self.port, 'nickname':'Spencer'}
+            msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname}
 
             # pickle the dict and send it to server
             s.send(pickle.dumps(msg))
             s.close()
 
-            # send a ping message to tell server we are alive
-
-            # close connection
-
-            # wait about 15 seconds and do it again forever
+            # wait about 15 seconds and do it again
             end = time.time()
-            time.sleep(15-(end-start))
+            time.sleep(15 - (end - start))
+
+    def leave_server(self):
+        # TODO - tell server we're leaving
+        msg = {'type':'QUIT', 'port':self.port}
+
+        # connect and say we're leaving
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.server_ip, self.server_port))
+        s.send(pickle.dumps(msg))
+        s.close()
+
 
     def get_active_peers(self):
         # get list of all active peers from server
@@ -179,6 +196,8 @@ class Peer(threading.Thread):
 
         s.send(data)
 
+        # wait for response
+
         ret_val = s.recv(4096)
 
         return_data = pickle.loads(ret_val)
@@ -187,20 +206,34 @@ class Peer(threading.Thread):
         print(return_data)
         return return_data
 
-cfg = {"LOCAL_PORT_NO": 4444, "SERVER_IP": '127.0.0.1', "SERVER_PORT": 9999}
+    def check_exit_flag(self):
+        if self.EXIT_FLAG:
+            self.leave_server() # THIS MUST BE A SYNCHRONOUS CALL else we may not leave gracefully
+
+        os._exit(1)
+
+try:
+    local_port = int(sys.argv[1])
+    nickname = str(sys.argv[2])
+except Exception:
+    print('COULDNT READ COMMAND LINE ARGS')
+    local_port = 4444
+    nickname = '???'
+
+cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '127.0.0.1', "SERVER_PORT": 9999, "name": nickname}
 
 p = Peer(cfg)
-# p.setDaemon(True) # allows use of CTRL+C to exit program
+p.setDaemon(True)  # allows use of CTRL+C to exit program
+
+print("Peer started on port " + str(local_port))
 
 # Peer object/thread created - now instantiate GUI
 
 gui = gui.Canvas_GUI_Wrapper(p)
-# gui.setDaemon(True)
+gui.setDaemon(True)
 
 gui2 = gui2.Image_Display_GUI(p)
-# gui2.setDaemon(True)
-
-# GUI now created - TODO - point GUI callbacks at Peer methods
+gui2.setDaemon(True)
 
 # Start peer / GUI threads
 p.start()
@@ -209,5 +242,4 @@ gui2.start()
 
 # Prevent our main thread from exiting, since all other methods are daemonic
 while True:
-    time.sleep(100)
-
+    time.sleep(1)

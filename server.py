@@ -82,7 +82,7 @@ class Server(threading.Thread):
             # client dict will be indexed by "IP:port_no" - replace with a new Peer object with current timestamp
             self.clients[index] = User(ip_addr, port_no, nickname)
 
-            print('Peer updated successfully!')
+            print('\nPeer updated successfully!')
             print(self.clients)
 
         finally:
@@ -113,7 +113,7 @@ class Server(threading.Thread):
             self.client_dict_lock.release()
 
     def server_thread(self, clientSocket, client_addr):
-        print('Handling client connection. . .')
+        print('\nHandling client connection. . .')
 
         # get the request from browser
         data = clientSocket.recv(4096)
@@ -124,7 +124,7 @@ class Server(threading.Thread):
         # the connected client's IP addr
         h, p = clientSocket.getpeername()
 
-        print('Message from client: ')
+        print('\nMessage from client: ')
         print(info)
 
         req_type = info['type']
@@ -138,12 +138,17 @@ class Server(threading.Thread):
             # respond with directory of all active clients
             self.send_list_of_all_peers_to_peer(clientSocket)
 
-        # do something with the info
+        if req_type == 'QUIT':
 
-        # if request is to update a client's last seen time, do that
+            # remove client from peers dict
+            index = h+':'+str(info['port'])
+            del self.clients[index]
+
+            print('Removed '+index+' due to QUIT command. . .')
 
         clientSocket.close()
-        pass
+
+
 
     # this is meant to be a thread that runs indefinitely
     # in general, loop approximately every few seconds and remove peer if a given peer is not active
@@ -190,5 +195,6 @@ s = Server()
 s.setDaemon(True)  # allows use of CTRL+C to exit program
 s.start()
 
+# sleep main thread indefinitely so program doesn't exit
 while True:
-    time.sleep(.1)
+    time.sleep(10000)
