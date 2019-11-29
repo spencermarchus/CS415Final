@@ -1,5 +1,7 @@
 # imports
 import io
+import os
+import time
 import tkinter as tk
 import tkinter.colorchooser as colorchooser
 from tkinter import *
@@ -48,7 +50,9 @@ class Canvas_GUI_Wrapper(threading.Thread):
     # leave chatroom
     def leaveChat(self):
         # leave the chatroom by letting server know you are exiting
-        quit()
+        self.peer.EXIT_FLAG = True
+        self.peer.leave_server()
+        os._exit(1)
 
     # this method is honestly disgusting but it needs to be this way
     def __init__(self, peer):
@@ -132,6 +136,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
         # run our gui
         self.gui.mainloop()
+
 
     # can't have a threaded method as a command for a button, so create a thread to handle this in the background
     def broadcast_canvas(self):

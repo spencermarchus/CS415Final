@@ -34,11 +34,12 @@ class Image_Display_GUI(threading.Thread):
                 try:
                     selection = self.Listbox.curselection()[0]
                 except Exception as e:
-                    i = 1
+                    pass
 
                 # if selection in Listbox has changed. . .
                 if selection != previous_selection:
                     previous_selection = selection
+                    # dump the binary png data in memory to a temp file so we can open it in the canvas
                     self.png = self.peer.images_received[selection][0]
                     f = open('received\\recv.png', 'wb')
                     f.write(self.png)
@@ -50,13 +51,21 @@ class Image_Display_GUI(threading.Thread):
                 # if there has been an update to the message list, update the listbox
                 images_list_len = len(self.peer.images_received)
                 if images_list_len != previous_state:
-                    print('UPDATING MESSAGES RECEIVED')
-                    previous_state += 1 # in case we somehow receive two images at once, increment only by one and process next image in next loop
-                    # this ^ needs to become more robust as we allow for deleting messages
-                    sender = self.peer.images_received[-1][1]
+                    previous_state = images_list_len
 
-                    self.Listbox.insert(END, str(images_list_len) + " - Message from " + sender)
-                    self.msg_counter += 1
+                    # refresh the listbox contents
+                    self.Listbox.delete(0, 'end')
+
+                    for i, img in enumerate(self.peer.images_received):
+                        self.Listbox.insert(END, str(i+1)+' - Message from '+img[1]) # img[1] is the nickname of sender
+
+                    # attempt to preserve the selected item from before update
+                    try:
+                        self.Listbox.selection_set(first=previous_selection)
+                    except Exception as e:
+                        self.Listbox.selection_set(first='end')
+
+                    print('UPDATED LISTBOX')
 
             except Exception as e:
                 print(e)
@@ -64,11 +73,22 @@ class Image_Display_GUI(threading.Thread):
 
             finally:
                 self.peer.peer_list_lock.release()
-                time.sleep(.02)  # we're busy waiting here for simplicity (no dealing with events), so we don't want to hog CPU cycles
+                time.sleep(.015)  # we're busy waiting here for simplicity (no dealing with events), so we don't want to hog CPU cycles
 
     def delete_selected_msg(self):
         # TODO
         pass
+
+    def check_exit_condition(self):
+        # every so often, check if we need to exit
+        if self.peer.EXIT_FLAG:
+            self.root.destroy()
+
+        time.sleep(.5)
+
+    def on_close(self):
+        self.peer.EXIT_FLAG = True
+        self.root.destroy()
 
     # override the run method of Thread... readability of this is horrible, but we have to create all these instance
     # variables variables in run() to avoid errors inherent to Tkinter and threading
@@ -76,6 +96,9 @@ class Image_Display_GUI(threading.Thread):
 
         self.root = tk.Tk()
         self.root.withdraw()
+
+        # define behavior when closing window
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # create our gui
         self.gui = tk.Tk()
@@ -99,20 +122,10 @@ class Image_Display_GUI(threading.Thread):
         self.Scrollbar1.place(x=1175, y=48)
         # button to delete an entry from the listbox
         self.Button1 = Button(self.gui, text="Delete Message", width=28, height=3,
-                              command=self.watch_for_incoming_messages)
+                              command=self.delete_selected_msg)
         self.Button1.place(x=980, y=545)
 
-        # buttons
-
-        # placeholder buttons (these should be removed but i am keeping for safety
-        # send button
-        # self.button1 = tk.Button(self.gui, text="<<", width=10, height=2, fg="black", activeforeground="red")
-        # self.button1.place(x=400, y=630)
-        # leave button
-        # self.button2 = tk.Button(self.gui, text=">>", width=10, height=2, fg="black", activeforeground="red")
-        # self.button2.place(x=500, y=630)
-
-        # start a thread which constantly watches Peer object for new messages received
+        # start a thread which constantly watches peer object and listbox
         watcher = threading.Thread(target=self.watch_for_incoming_messages)
         watcher.setDaemon(True)
         watcher.start()

@@ -138,12 +138,17 @@ class Server(threading.Thread):
             # respond with directory of all active clients
             self.send_list_of_all_peers_to_peer(clientSocket)
 
-        # do something with the info
+        if req_type == 'QUIT':
 
-        # if request is to update a client's last seen time, do that
+            # remove client from peers dict
+            index = h+':'+str(info['port'])
+            del self.clients[index]
+
+            print('Removed '+index+' due to QUIT command. . .')
 
         clientSocket.close()
-        pass
+
+
 
     # this is meant to be a thread that runs indefinitely
     # in general, loop approximately every few seconds and remove peer if a given peer is not active
@@ -190,5 +195,6 @@ s = Server()
 s.setDaemon(True)  # allows use of CTRL+C to exit program
 s.start()
 
+# sleep main thread indefinitely so program doesn't exit
 while True:
-    time.sleep(.1)
+    time.sleep(10000)

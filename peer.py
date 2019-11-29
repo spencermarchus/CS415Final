@@ -1,3 +1,4 @@
+import os
 import socket
 import sys
 import threading
@@ -33,7 +34,8 @@ class Peer(threading.Thread):
 
         self.peer_list_lock = threading.Lock()
 
-        time.sleep(2)
+        # maintain a flag to keep track of whether or not we need to exit all threads (used to exit gracefully)
+        self.EXIT_FLAG = False
 
 
     def run(self):
@@ -173,7 +175,14 @@ class Peer(threading.Thread):
 
     def leave_server(self):
         # TODO - tell server we're leaving
-        pass
+        msg = {'type':'QUIT', 'port':self.port}
+
+        # connect and say we're leaving
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.server_ip, self.server_port))
+        s.send(pickle.dumps(msg))
+        s.close()
+
 
     def get_active_peers(self):
         # get list of all active peers from server
@@ -197,14 +206,19 @@ class Peer(threading.Thread):
         print(return_data)
         return return_data
 
+    def check_exit_flag(self):
+        if self.EXIT_FLAG:
+            self.leave_server() # THIS MUST BE A SYNCHRONOUS CALL else we may not leave gracefully
+
+        os._exit(1)
 
 try:
     local_port = int(sys.argv[1])
     nickname = str(sys.argv[2])
 except Exception:
-    print('COULDNT READ PORT VALUE FROM BATCH FILE')
+    print('COULDNT READ COMMAND LINE ARGS')
     local_port = 4444
-    nickname = 'TEST'
+    nickname = '???'
 
 cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '127.0.0.1', "SERVER_PORT": 9999, "name": nickname}
 
@@ -228,4 +242,4 @@ gui2.start()
 
 # Prevent our main thread from exiting, since all other methods are daemonic
 while True:
-    time.sleep(100000)
+    time.sleep(1)
