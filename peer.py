@@ -174,7 +174,7 @@ class Peer(threading.Thread):
             time.sleep(15 - (end - start))
 
     def leave_server(self):
-        # TODO - tell server we're leaving
+        # tell server we're leaving
         msg = {'type':'QUIT', 'port':self.port}
 
         # connect and say we're leaving

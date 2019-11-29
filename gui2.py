@@ -1,4 +1,5 @@
 import io
+import os
 import time
 import tkinter as tk
 import threading
@@ -57,7 +58,8 @@ class Image_Display_GUI(threading.Thread):
                     self.Listbox.delete(0, 'end')
 
                     for i, img in enumerate(self.peer.images_received):
-                        self.Listbox.insert(END, str(i+1)+' - Message from '+img[1]) # img[1] is the nickname of sender
+                        self.Listbox.insert(END, str(i + 1) + ' - Message from ' + img[
+                            1])  # img[1] is the nickname of sender
 
                     # attempt to preserve the selected item from before update
                     try:
@@ -73,32 +75,18 @@ class Image_Display_GUI(threading.Thread):
 
             finally:
                 self.peer.peer_list_lock.release()
-                time.sleep(.015)  # we're busy waiting here for simplicity (no dealing with events), so we don't want to hog CPU cycles
+                time.sleep(.015)  # don't lag the GUI
 
     def delete_selected_msg(self):
         # TODO
         pass
 
-    def check_exit_condition(self):
-        # every so often, check if we need to exit
-        if self.peer.EXIT_FLAG:
-            self.root.destroy()
-
-        time.sleep(.5)
-
-    def on_close(self):
-        self.peer.EXIT_FLAG = True
-        self.root.destroy()
-
-    # override the run method of Thread... readability of this is horrible, but we have to create all these instance
+    # override the run method of Thread... readability of this is horrible, but we have to create all the instance
     # variables variables in run() to avoid errors inherent to Tkinter and threading
     def run(self):
 
         self.root = tk.Tk()
         self.root.withdraw()
-
-        # define behavior when closing window
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # create our gui
         self.gui = tk.Tk()

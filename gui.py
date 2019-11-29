@@ -51,7 +51,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
     def leaveChat(self):
         # leave the chatroom by letting server know you are exiting
         self.peer.EXIT_FLAG = True
-        self.peer.leave_server()
+        self.peer.leave_server() # synchronous call to ensure that server knows
         os._exit(1)
 
     # this method is honestly disgusting but it needs to be this way
