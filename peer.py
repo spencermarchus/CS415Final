@@ -77,6 +77,7 @@ class Peer(threading.Thread):
             #     image.write(img)
             print("Image recieved from " + sender)
             self.handle_image(img, sender)
+            self.need_refresh = True
 
         if data_loaded['type'] == "MESSAGE":
             print("Message Recieved: " + data_loaded['data'] + " From: " + data_loaded['sender'])
@@ -125,6 +126,8 @@ class Peer(threading.Thread):
     # watcher threads in GUI handle the rest
     def handle_image(self, png, sender):
         self.images_received.append((png, sender))
+    def delete_image(self, ind):
+        del (self.images_received[ind])
 
     def broadcast_string(self, message):
         # get updated client dict
@@ -211,6 +214,7 @@ class Peer(threading.Thread):
             self.leave_server() # THIS MUST BE A SYNCHRONOUS CALL else we may not leave gracefully
 
         os._exit(1)
+
 
 try:
     local_port = int(sys.argv[1])

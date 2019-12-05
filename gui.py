@@ -5,7 +5,6 @@ import time
 import tkinter as tk
 import tkinter.colorchooser as colorchooser
 from tkinter import *
-from mttkinter import mtTkinter
 import sys
 from PIL import ImageGrab, Image
 import threading
@@ -153,15 +152,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
         # save the canvas
     def broadcast_canvas_thread(self):
-        # x = self.gui.winfo_rootx() + self.canvas.winfo_x()
-        # y = self.gui.winfo_rooty() + self.canvas.winfo_y()
-        # x1 = x + self.canvas.winfo_width()
-        # y1 = y + self.canvas.winfo_height()
-        # # temporarily save image to disk
-        # ImageGrab.grab().crop((x, y, x1, y1)).save("outgoing.png")
-
         self.save_as_png("outgoing")
-
         img_pointer = open('outgoing.png', mode='rb')
 
         # tell peer to broadcast image with given file handle or "pointer" to file

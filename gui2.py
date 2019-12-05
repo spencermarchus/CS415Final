@@ -1,11 +1,10 @@
 import io
 import os
+import datetime
 import time
 import tkinter as tk
 import threading
 from tkinter import *
-from mttkinter import mtTkinter
-from PIL import Image
 
 
 class Image_Display_GUI(threading.Thread):
@@ -58,7 +57,8 @@ class Image_Display_GUI(threading.Thread):
                     self.Listbox.delete(0, 'end')
 
                     for i, img in enumerate(self.peer.images_received):
-                        self.Listbox.insert(END, str(i + 1) + ' - Message from ' + img[
+                        now = datetime.datetime.now()
+                        self.Listbox.insert(END, str(now.strftime("%I:%M %p")) + ' - Message from ' + img[
                             1])  # img[1] is the nickname of sender
 
                     # attempt to preserve the selected item from before update
@@ -79,7 +79,17 @@ class Image_Display_GUI(threading.Thread):
 
     def delete_selected_msg(self):
         # TODO
-        pass
+        selection = -1
+        try:
+            selection = self.Listbox.curselection()[0]
+        except Exception as e:
+            pass
+        self.Listbox.delete(selection)
+        self.peer.delete_image(selection)
+
+
+
+
 
     # override the run method of Thread... readability of this is horrible, but we have to create all the instance
     # variables variables in run() to avoid errors inherent to Tkinter and threading
