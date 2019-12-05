@@ -144,14 +144,23 @@ class Canvas_GUI_Wrapper(threading.Thread):
         t.setDaemon(True)
         t.start()
 
-    # take a screencap of the GUI (yes this is the best way I could find!) and broadcast the image to all peers in peer
+    def save_as_png(self, fileName):
+        # save postscipt image
+        self.canvas.postscript(file=fileName + '.eps')
+        # use PIL to convert to PNG
+        img = Image.open(fileName + '.eps')
+        img.save(fileName + '.png', 'png')
+
+        # save the canvas
     def broadcast_canvas_thread(self):
-        x = self.gui.winfo_rootx() + self.canvas.winfo_x()
-        y = self.gui.winfo_rooty() + self.canvas.winfo_y()
-        x1 = x + self.canvas.winfo_width()
-        y1 = y + self.canvas.winfo_height()
-        # temporarily save image to disk
-        ImageGrab.grab().crop((x, y, x1, y1)).save("outgoing.png")
+        # x = self.gui.winfo_rootx() + self.canvas.winfo_x()
+        # y = self.gui.winfo_rooty() + self.canvas.winfo_y()
+        # x1 = x + self.canvas.winfo_width()
+        # y1 = y + self.canvas.winfo_height()
+        # # temporarily save image to disk
+        # ImageGrab.grab().crop((x, y, x1, y1)).save("outgoing.png")
+
+        self.save_as_png("outgoing")
 
         img_pointer = open('outgoing.png', mode='rb')
 
