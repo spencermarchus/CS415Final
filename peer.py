@@ -241,7 +241,9 @@ gui2.setDaemon(True)
 
 # Start peer / GUI threads
 p.start()
+time.sleep(.5)
 gui.start()
+time.sleep(.5)
 gui2.start()
 
 # Prevent our main thread from exiting, since all other methods are daemonic
