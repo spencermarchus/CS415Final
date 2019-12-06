@@ -5,6 +5,7 @@ import time
 import tkinter as tk
 import threading
 from tkinter import *
+from PIL import Image, ImageTk
 
 
 class Image_Display_GUI(threading.Thread):
@@ -41,11 +42,17 @@ class Image_Display_GUI(threading.Thread):
                     previous_selection = selection
                     # dump the binary png data in memory to a temp file so we can open it in the canvas
                     self.png = self.peer.images_received[selection][0]
-                    f = open('received\\recv.png', 'wb')
+                    f = open(r'received\recv.png', 'wb')
                     f.write(self.png)
                     f.close()
-                    img = PhotoImage(file='received\\recv.png', master=self.canvas)
-                    self.canvas.create_image((960 / 2, 590 / 2), image=img)
+                    png = Image.open(r'received\recv.png').resize(
+                        (960, 590), Image.ANTIALIAS)
+                    img = ImageTk.PhotoImage(png, master=self.canvas)
+                    self.canvas.create_image((2, 2), anchor=NW, image=img)
+
+                    # img = Image.open(r"received\recv.png")
+                    # img.resize((1200, 610), Image.LANCZOS)
+                    # self.png = ImageTk.PhotoImage(img)
                     print('UPDATED CANVAS')
 
                 # if there has been an update to the message list, update the listbox
@@ -128,5 +135,6 @@ class Image_Display_GUI(threading.Thread):
         watcher.setDaemon(True)
         watcher.start()
 
+        time.sleep(.5)
         # run our gui
         self.gui.mainloop()

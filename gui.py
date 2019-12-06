@@ -88,7 +88,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
         # populate our gui
         # canvas object
-        self.canvas = Canvas(self.gui, bg="gray", width=960, height=590)
+        self.canvas = Canvas(self.gui, bg="white", width=960, height=590)
         self.canvas.place(x=10, y=10)
         # buttons
         # send button
@@ -132,10 +132,9 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.canvas.bind('<1>', self.startPaint)
         # size
         self.selectedWidth = self.w1.get()
-
+        time.sleep(.5)
         # run our gui
         self.gui.mainloop()
-
 
     # can't have a threaded method as a command for a button, so create a thread to handle this in the background
     def broadcast_canvas(self):
