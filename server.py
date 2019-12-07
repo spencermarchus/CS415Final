@@ -8,7 +8,7 @@ import datetime
 import time
 import _pickle as pickle
 
-host = '127.0.0.1'
+host = ''
 port = 9999
 
 
