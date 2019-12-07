@@ -20,7 +20,7 @@ class Peer(threading.Thread):
         super(Peer, self).__init__()
 
         self.port = config["LOCAL_PORT_NO"]
-
+        self.local_ipv4 = socket.gethostbyname(socket.gethostname())
         self.server_ip = config["SERVER_IP"]
         self.server_port = config["SERVER_PORT"]
 
@@ -166,7 +166,7 @@ class Peer(threading.Thread):
 
             s.connect((self.server_ip, self.server_port))
 
-            msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname}
+            msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip':self.local_ipv4}
 
             # pickle the dict and send it to server
             s.send(pickle.dumps(msg))
