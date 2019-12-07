@@ -97,13 +97,15 @@ class Peer(threading.Thread):
         # iterate over peers and send the image in separate threads
         for p in client_dict:
             if p.get("port") != self.port:
-                IP = p.get("ip")
+                IP = p.get("local_ip")
                 port = p.get("port")
                 sender = p.get("name")
                 d = threading.Thread(name='client',
                                      target=self.send_image, args=(IP, port, png, sender_name))
                 d.setDaemon(True)  # can run in background
                 d.start()
+
+                print("SENDING IMAGE TO "+IP+':'+port)
 
     def send_image(self, IP, port, png, sender_name):
         try:
@@ -126,6 +128,7 @@ class Peer(threading.Thread):
     # watcher threads in GUI handle the rest
     def handle_image(self, png, sender):
         self.images_received.append((png, sender))
+
     def delete_image(self, ind):
         del (self.images_received[ind])
 
@@ -224,7 +227,7 @@ except Exception:
     local_port = 4444
     nickname = '???'
 
-cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '127.0.0.1', "SERVER_PORT": 9999, "name": nickname}
+cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9999, "name": nickname}
 
 p = Peer(cfg)
 p.setDaemon(True)  # allows use of CTRL+C to exit program

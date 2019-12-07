@@ -135,6 +135,5 @@ class Image_Display_GUI(threading.Thread):
         watcher.setDaemon(True)
         watcher.start()
 
-        time.sleep(.5)
         # run our gui
         self.gui.mainloop()
