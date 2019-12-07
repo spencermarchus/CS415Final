@@ -17,10 +17,11 @@ port = 9999
 
 class User:
 
-    def __init__(self, ip, port_no, name):
+    def __init__(self, ip, local_ip, port_no, name):
         self.nickname = name
         self.ip = ip
         self.port = port_no
+        self.local_ip = local_ip  # represents a remote peer's IP on its local network
         self.timestamp = datetime.datetime.now()  # current date and time
 
 
@@ -73,6 +74,7 @@ class Server(threading.Thread):
             ip_addr = client_info['IP']
             port_no = client_info['PORT_NO']
             nickname = client_info['nickname']
+            local_ip = client_info['local_ip']
 
             index = ip_addr + ':' + str(port_no)
 
@@ -80,7 +82,7 @@ class Server(threading.Thread):
             self.client_dict_lock.acquire()
 
             # client dict will be indexed by "IP:port_no" - replace with a new Peer object with current timestamp
-            self.clients[index] = User(ip_addr, port_no, nickname)
+            self.clients[index] = User(ip_addr, local_ip, port_no, nickname)
 
             print('\nPeer updated successfully!')
             print(self.clients)
@@ -102,7 +104,8 @@ class Server(threading.Thread):
                 ip = user.ip
                 port = user.port
                 name = user.nickname
-                return_list.append({'ip': ip, 'port': port, 'name': name})
+                local_ip = user.local_ip
+                return_list.append({'ip': ip, 'local_ip': local_ip, 'port': port, 'name': name})
 
             # send dict to peer's socket
             response = pickle.dumps(return_list)
@@ -131,7 +134,7 @@ class Server(threading.Thread):
 
         if req_type == 'KEEP_ALIVE':
             # update the time which we have last seen this client
-            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname']}
+            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip']}
             self.update_peer(client_info)
 
         if req_type == 'REQUEST_PEER_DICT':
