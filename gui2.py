@@ -27,6 +27,10 @@ class Image_Display_GUI(threading.Thread):
 
         previous_state = 0
         previous_selection = -1
+
+        # keep track of whether or not we have received an update and need to re-display the image
+        needs_updated_flag = False
+
         while True:
             try:
                 self.peer.peer_list_lock.acquire()
@@ -37,36 +41,40 @@ class Image_Display_GUI(threading.Thread):
                 except Exception as e:
                     pass
 
-                # if selection in Listbox has changed. . .
-                if selection != previous_selection:
+                # if there are images to display, and selection in Listbox has changed, or we need an update. . .
+                if len(self.peer.images_received) > 0 and (selection != previous_selection or needs_updated_flag):
                     previous_selection = selection
-                    # dump the binary png data in memory to a temp file so we can open it in the canvas
-                    self.png = self.peer.images_received[selection][0]
-                    f = open(r'received\recv.png', 'wb')
-                    f.write(self.png)
-                    f.close()
-                    png = Image.open(r'received\recv.png').resize(
-                        (960, 590), Image.ANTIALIAS)
-                    img = ImageTk.PhotoImage(png, master=self.canvas)
-                    self.canvas.create_image((2, 2), anchor=NW, image=img)
 
-                    # img = Image.open(r"received\recv.png")
-                    # img.resize((1200, 610), Image.LANCZOS)
-                    # self.png = ImageTk.PhotoImage(img)
+                    # maintain reference to raw PNG data
+                    raw_png = self.peer.images_received[selection][0]
+
+                    # create PIL Image object from raw data and resize for GUI
+                    png_img = Image.open(io.BytesIO(raw_png)).resize((960, 590), Image.ANTIALIAS)
+
+                    # create PhotoImage object from Image to display to GUI
+                    photoimg = ImageTk.PhotoImage(png_img, master=self.canvas)
+
+                    self.canvas.create_image((2, 2), anchor=NW, image=photoimg)
+
                     print('UPDATED CANVAS')
+                    needs_updated_flag = False
 
                 # if there has been an update to the message list, update the listbox
                 images_list_len = len(self.peer.images_received)
                 if images_list_len != previous_state:
+
                     previous_state = images_list_len
+
+                    # if user has not made a selection in the list box, update gui to display latest chat
+                    needs_updated_flag = images_list_len != 0
 
                     # refresh the listbox contents
                     self.Listbox.delete(0, 'end')
 
                     for i, img in enumerate(self.peer.images_received):
                         now = datetime.datetime.now()
-                        self.Listbox.insert(END, str(now.strftime("%I:%M %p")) + ' - Message from ' + img[
-                            1])  # img[1] is the nickname of sender
+                        # img[1] is the nickname of sender, or just "Me" if the user is the sender
+                        self.Listbox.insert(END, str(now.strftime("%I:%M %p")) + ' - Chat sent by ' + img[1])
 
                     # attempt to preserve the selected item from before update
                     try:
@@ -81,11 +89,13 @@ class Image_Display_GUI(threading.Thread):
                 pass
 
             finally:
+
                 self.peer.peer_list_lock.release()
-                time.sleep(.015)  # don't lag the GUI
+
+                if not needs_updated_flag:
+                    time.sleep(.05)  # sleep a bit if we don't need to do an update in the next loop iteration
 
     def delete_selected_msg(self):
-        # TODO
         selection = -1
         try:
             selection = self.Listbox.curselection()[0]
@@ -94,8 +104,8 @@ class Image_Display_GUI(threading.Thread):
         self.Listbox.delete(selection)
         self.peer.delete_image(selection)
 
-
-
+        if self.Listbox.size() == 0:
+            self.canvas.delete('all')
 
 
     # override the run method of Thread... readability of this is horrible, but we have to create all the instance
@@ -117,8 +127,8 @@ class Image_Display_GUI(threading.Thread):
         self.canvas.place(x=10, y=10)
 
         # label for the listbox
-        self.Label1 = Label(self.gui, text="Incoming Messages")
-        self.Label1.place(x=1025, y=10)
+        self.Label1 = Label(self.gui, text="Messages")
+        self.Label1.place(x=1050, y=10)
         # listbox to store our given messages
         self.Listbox = Listbox(self.gui, width=31, height=30)
         self.Listbox.place(x=980, y=48)
@@ -130,7 +140,7 @@ class Image_Display_GUI(threading.Thread):
                               command=self.delete_selected_msg)
         self.Button1.place(x=980, y=545)
 
-        # start a thread which constantly watches peer object and listbox
+        # start a thread which constantly watches for incoming messages and updates listbox/gui
         watcher = threading.Thread(target=self.watch_for_incoming_messages)
         watcher.setDaemon(True)
         watcher.start()

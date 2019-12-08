@@ -28,11 +28,14 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.lastY = e.y
 
     # method to perform painting
+    # sleeps prevent 'twitching' of line when drawing slowly
     def paint(self, e):
         self.updateSize(None)
+        time.sleep(.02)
         x = e.x
         y = e.y
         self.canvas.create_line((self.lastX, self.lastY, x, y), width=self.selectedWidth, fill=self.color[1])
+        time.sleep(.02)
         self.lastX = x
         self.lastY = y
 
@@ -132,7 +135,6 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.canvas.bind('<1>', self.startPaint)
         # size
         self.selectedWidth = self.w1.get()
-        time.sleep(.5)
         # run our gui
         self.gui.mainloop()
 

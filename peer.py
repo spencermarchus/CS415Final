@@ -92,14 +92,13 @@ class Peer(threading.Thread):
 
         img_pointer.close()
 
-        # self.images_received.append((png, sender))
+        self.images_received.append((png, "Me"))
 
         # iterate over peers and send the image in separate threads
         for p in client_dict:
             if p.get("port") != self.port:
                 IP = p.get("local_ip")
                 port = p.get("port")
-                sender = p.get("name")
                 d = threading.Thread(name='client',
                                      target=self.send_image, args=(IP, port, png, sender_name))
                 d.setDaemon(True)  # can run in background
