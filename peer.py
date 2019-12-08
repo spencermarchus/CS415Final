@@ -37,7 +37,6 @@ class Peer(threading.Thread):
         # maintain a flag to keep track of whether or not we need to exit all threads (used to exit gracefully)
         self.EXIT_FLAG = False
 
-
     def run(self):
         # Create a TCP socket to listen for connections
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -104,7 +103,7 @@ class Peer(threading.Thread):
                 d.setDaemon(True)  # can run in background
                 d.start()
 
-                print("SENDING IMAGE TO "+IP+':'+str(port))
+                print("SENDING IMAGE TO " + IP + ':' + str(port))
 
     def send_image(self, IP, port, png, sender_name):
         try:
@@ -143,7 +142,7 @@ class Peer(threading.Thread):
                 port = p.get("port")
                 sender = p.get("name")
 
-                print("SENDING TO "+IP+str(port))
+                print("SENDING TO " + IP + str(port))
                 # spawn threads to send strings to all peers
                 d = threading.Thread(name='client',
                                      target=self.send_chat, args=(IP, port, message, sender))
@@ -165,12 +164,12 @@ class Peer(threading.Thread):
         print('Pinging server. . .')
         while True:
             start = time.time()
-            # open socket to server and ensure timeout << 30 seconds
+            # open socket to server
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             s.connect((self.server_ip, self.server_port))
 
-            msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip':self.local_ipv4}
+            msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4}
 
             # pickle the dict and send it to server
             s.send(pickle.dumps(msg))
@@ -182,14 +181,13 @@ class Peer(threading.Thread):
 
     def leave_server(self):
         # tell server we're leaving
-        msg = {'type':'QUIT', 'port':self.port}
+        msg = {'type': 'QUIT', 'port': self.port}
 
         # connect and say we're leaving
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.server_ip, self.server_port))
         s.send(pickle.dumps(msg))
         s.close()
-
 
     def get_active_peers(self):
         # get list of all active peers from server
@@ -215,7 +213,7 @@ class Peer(threading.Thread):
 
     def check_exit_flag(self):
         if self.EXIT_FLAG:
-            self.leave_server() # THIS MUST BE A SYNCHRONOUS CALL else we may not leave gracefully
+            self.leave_server()  # THIS MUST BE A SYNCHRONOUS CALL else we may not leave gracefully
 
         os._exit(1)
 
