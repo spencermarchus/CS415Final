@@ -10,7 +10,7 @@ import gui2
 import tkinter as tk
 from tkinter import *
 
-host = '127.0.0.1'
+host = ''
 
 
 class Peer(threading.Thread):
@@ -105,7 +105,7 @@ class Peer(threading.Thread):
                 d.setDaemon(True)  # can run in background
                 d.start()
 
-                print("SENDING IMAGE TO "+IP+':'+port)
+                print("SENDING IMAGE TO "+IP+':'+str(port))
 
     def send_image(self, IP, port, png, sender_name):
         try:
@@ -140,9 +140,11 @@ class Peer(threading.Thread):
 
         for p in client_dict:
             if p.get("port") != self.port:
-                IP = p.get("ip")
+                IP = p.get("local_ip")
                 port = p.get("port")
                 sender = p.get("name")
+
+                print("SENDING TO "+IP+str(port))
                 # spawn threads to send strings to all peers
                 d = threading.Thread(name='client',
                                      target=self.send_chat, args=(IP, port, message, sender))
