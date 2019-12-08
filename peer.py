@@ -87,9 +87,14 @@ class Peer(threading.Thread):
         # get list of all active peers from server
         client_dict = self.get_active_peers()
 
-        png = img_pointer.read(512000)
+        png = img_pointer.read(32768)
 
         img_pointer.close()
+
+        if os.path.exists("outgoing.png"):
+            os.remove("outgoing.png")
+        if os.path.exists("outgoing.eps"):
+            os.remove("outgoing.eps")
 
         self.images_received.append((png, "Me"))
 
@@ -100,6 +105,7 @@ class Peer(threading.Thread):
                 port = p.get("port")
                 d = threading.Thread(name='client',
                                      target=self.send_image, args=(IP, port, png, sender_name))
+
                 d.setDaemon(True)  # can run in background
                 d.start()
 
