@@ -9,6 +9,7 @@ import gui
 import gui2
 import tkinter as tk
 from tkinter import *
+import datetime
 
 host = ''
 
@@ -131,7 +132,8 @@ class Peer(threading.Thread):
     # simply append the image and its sender to our list in a tuple
     # watcher threads in GUI handle the rest
     def handle_image(self, png, sender):
-        self.images_received.append((png, sender))
+        now = datetime.datetime.now()
+        self.images_received.append((png, sender, str(now.strftime("%I:%M %p"))))
 
     def delete_image(self, ind):
         del (self.images_received[ind])

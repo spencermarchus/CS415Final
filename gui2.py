@@ -72,9 +72,8 @@ class Image_Display_GUI(threading.Thread):
                     self.Listbox.delete(0, 'end')
 
                     for i, img in enumerate(self.peer.images_received):
-                        now = datetime.datetime.now()
                         # img[1] is the nickname of sender, or just "Me" if the user is the sender
-                        self.Listbox.insert(END, str(now.strftime("%I:%M %p")) + ' - Chat sent by ' + img[1])
+                        self.Listbox.insert(END, img[2] + ' - Chat sent by ' + img[1])
 
                     # attempt to preserve the selected item from before update
                     try:
