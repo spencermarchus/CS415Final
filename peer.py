@@ -97,7 +97,7 @@ class Peer(threading.Thread):
         if os.path.exists("outgoing.eps"):
             os.remove("outgoing.eps")
 
-        self.images_received.append((png, "Me"))
+        self.handle_image(png, "Me")
 
         # iterate over peers and send the image in separate threads
         for p in client_dict:
