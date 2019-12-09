@@ -73,7 +73,7 @@ class Image_Display_GUI(threading.Thread):
 
                     for i, img in enumerate(self.peer.images_received):
                         # img[1] is the nickname of sender, or just "Me" if the user is the sender
-                        print(img[2])
+                        # img[2] is the date of when the message was received
                         self.Listbox.insert(END, img[2] + ' - Chat sent by ' + img[1])
 
                     # attempt to preserve the selected item from before update
@@ -98,10 +98,13 @@ class Image_Display_GUI(threading.Thread):
     def delete_selected_msg(self):
         selection = -1
         try:
+            # get the user's cursor selection
             selection = self.Listbox.curselection()[0]
         except Exception as e:
             pass
+        # delete the selection from the listbox
         self.Listbox.delete(selection)
+        # delete the selection from the peer's list of images
         self.peer.delete_image(selection)
 
         if self.Listbox.size() == 0:

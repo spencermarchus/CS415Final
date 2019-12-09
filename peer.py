@@ -62,8 +62,7 @@ class Peer(threading.Thread):
             d.start()
 
     def peer_thread(self, client_sock, client_addr):
-        # do stuff
-        # generally, here we will handle receiving something like an image
+        # handle receiving an image
         print('Handling message. . .')
 
         data = client_sock.recv(512000)
@@ -73,14 +72,14 @@ class Peer(threading.Thread):
         if data_loaded['type'] == 'IMAGE':
             img = data_loaded['data']
             sender = data_loaded['sender']
-            # with open('tst' + str(self.port) + '.png', 'wb') as image:
-            #     image.write(img)
-            print("Image recieved from " + sender)
-            self.handle_image(img, sender)
-            self.need_refresh = True
 
-        if data_loaded['type'] == "MESSAGE":
-            print("Message Recieved: " + data_loaded['data'] + " From: " + data_loaded['sender'])
+            print("Image recieved from " + sender)
+            # save the image received to a list
+            self.handle_image(img, sender)
+
+
+        # if data_loaded['type'] == "MESSAGE":
+        #     print("Message Recieved: " + data_loaded['data'] + " From: " + data_loaded['sender'])
 
     # send an image to all known peers
     def broadcast_image(self, img_pointer, sender_name):
@@ -112,13 +111,17 @@ class Peer(threading.Thread):
 
                 print("SENDING IMAGE TO " + IP + ':' + str(port))
 
+    # image sending method that makes the socket connection and send the image
     def send_image(self, IP, port, png, sender_name):
         try:
+            # create socket connection
             img_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             img_s.connect((IP, port))
 
+            # print which peer is connected
             print('Connected to Peer: ' + sender_name)
 
+            # send the message along with the type, image, and the sender
             msg = {'type': 'IMAGE', 'data': png, 'sender': sender_name}
 
             # pickle the dict and send it
@@ -129,13 +132,18 @@ class Peer(threading.Thread):
             print(e)
             print('Could not make connection to peer!')
 
-    # simply append the image and its sender to our list in a tuple
+    # simply append the image, its sender, and a timestamp to our list in a tuple
     # watcher threads in GUI handle the rest
     def handle_image(self, png, sender):
+        # get the current datetime
         now = datetime.datetime.now()
+        # append with the image, sender, and the time in 12 hour format
         self.images_received.append((png, sender, str(now.strftime("%I:%M %p"))))
 
+    # method to delete images from the peer's list.
+    # gui2 was unable to edit the peer list so the method has to be here
     def delete_image(self, ind):
+        # delete image at specific index
         del (self.images_received[ind])
 
     def broadcast_string(self, message):
