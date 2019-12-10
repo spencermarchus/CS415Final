@@ -161,7 +161,7 @@ class Server(threading.Thread):
 
         if req_type == 'KEEP_ALIVE':
             # update the time which we have last seen this client
-            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip']}
+            client_info = {'IP': 'TEST', 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip']}
             self.update_peer(client_info)
 
         if req_type == 'REQUEST_PEER_DICT':
@@ -171,7 +171,7 @@ class Server(threading.Thread):
         if req_type == 'QUIT':
 
             # remove client from peers dict
-            index = h+':'+str(info['port'])
+            index = 'TEST'+':'+str(info['port'])
             del self.clients[index]
 
             print('Removed '+index+' due to QUIT command. . .')
