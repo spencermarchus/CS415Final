@@ -195,7 +195,7 @@ class Peer(threading.Thread):
         print('Sent message: ' + message)
         msg = {'type': 'MESSAGE', 'data': message, 'sender': sender}
         # pickle the dict and send it
-        msg_s.send(pickle.dumps(msg))
+        msg_s.sendall(pickle.dumps(msg))
         msg_s.close()
 
     # ping the server every few seconds to maintain alive status
@@ -212,7 +212,7 @@ class Peer(threading.Thread):
             msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4}
 
             # pickle the dict and send it to server
-            s.send(pickle.dumps(msg))
+            s.sendall(pickle.dumps(msg))
             s.close()
 
             # wait about 15 seconds and do it again
@@ -237,7 +237,7 @@ class Peer(threading.Thread):
 
                 data = pickle.dumps(msg)
 
-                s.send(data)
+                s.sendall(data)
 
                 ret_val = s.recv(5000000)
 
@@ -267,7 +267,7 @@ class Peer(threading.Thread):
         # connect and say we're leaving
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.server_ip, self.server_port))
-        s.send(pickle.dumps(msg))
+        s.sendall(pickle.dumps(msg))
         s.close()
 
     def get_active_peers(self):
@@ -281,7 +281,7 @@ class Peer(threading.Thread):
 
         data = pickle.dumps(request_dict)
 
-        s.send(data)
+        s.sendall(data)
 
         # wait for response
 
