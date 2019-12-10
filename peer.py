@@ -16,7 +16,7 @@ host = ''
 
 class Peer(threading.Thread):
 
-    def __init__(self, config):
+    def __init__(self, config, mode):
 
         super(Peer, self).__init__()
 
@@ -27,16 +27,21 @@ class Peer(threading.Thread):
 
         self.images_received = []
 
+        self.mode = config['mode']
+
         self.nickname = config['name']
 
         keep_alive = threading.Thread(name='keep_alive', target=self.ping_server_periodically, args=())
         keep_alive.setDaemon(True)
         keep_alive.start()
 
-        self.peer_list_lock = threading.Lock()
+        if self.mode == "INTERNET":
+            # need to fetch messages from server
+            msg_check_thread = threading.Thread(name='msg_check', target=self.check_for_messages_over_network, args=())
+            msg_check_thread.setDaemon(True)
+            msg_check_thread.start()
 
-        # maintain a flag to keep track of whether or not we need to exit all threads (used to exit gracefully)
-        self.EXIT_FLAG = False
+        self.peer_list_lock = threading.Lock()
 
     def run(self):
         # Create a TCP socket to listen for connections
@@ -77,15 +82,14 @@ class Peer(threading.Thread):
             # save the image received to a list
             self.handle_image(img, sender)
 
+        else:
+            print("UNKNOWN MESSAGE TYPE RECEIVED: " + data_loaded)
 
         # if data_loaded['type'] == "MESSAGE":
         #     print("Message Recieved: " + data_loaded['data'] + " From: " + data_loaded['sender'])
 
     # send an image to all known peers
     def broadcast_image(self, img_pointer, sender_name):
-
-        # get list of all active peers from server
-        client_dict = self.get_active_peers()
 
         png = img_pointer.read(32768)
 
@@ -96,11 +100,22 @@ class Peer(threading.Thread):
         if os.path.exists("outgoing.eps"):
             os.remove("outgoing.eps")
 
-        self.handle_image(png, "Me")
+        if self.mode == 'INTERNET':
+            # we are already in a separate thread, so simply send the image to the server for distribution
+            self.handle_image(png, "Me")
+            self.send_image(self.server_ip, self.server_port, png, sender_name, self.local_ipv4, 'INTERNET_MSG')
+            print("SENDING IMAGE TO " + self.server_ip + ':' + self.server_port)
 
-        # iterate over peers and send the image in separate threads
-        for p in client_dict:
-            if p.get("port") != self.port:
+        if self.mode == 'LAN':
+
+            # get list of all active peers from server
+            client_dict = self.get_active_peers()
+
+            self.handle_image(png, "Me")
+
+            # iterate over peers and send the image in separate threads
+            for p in client_dict:
+                # if p.get("port") != self.port:
                 IP = p.get("local_ip")
                 port = p.get("port")
                 d = threading.Thread(name='client',
@@ -111,8 +126,8 @@ class Peer(threading.Thread):
 
                 print("SENDING IMAGE TO " + IP + ':' + str(port))
 
-    # image sending method that makes the socket connection and send the image
-    def send_image(self, IP, port, png, sender_name):
+    # image sending method that makes the socket connection and sends the image
+    def send_image(self, IP, port, png, sender_name, local_ip, msg_type='IMAGE'):
         try:
             # create socket connection
             img_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -122,7 +137,10 @@ class Peer(threading.Thread):
             print('Connected to Peer: ' + sender_name)
 
             # send the message along with the type, image, and the sender
-            msg = {'type': 'IMAGE', 'data': png, 'sender': sender_name}
+            msg = {'type': msg_type, 'data': png, 'sender': sender_name}
+
+            if self.mode == "INTERNET":
+                msg['local_ip'] = local_ip
 
             # pickle the dict and send it
             img_s.send(pickle.dumps(msg))
@@ -195,6 +213,38 @@ class Peer(threading.Thread):
             end = time.time()
             time.sleep(15 - (end - start))
 
+    # pings a central server and checks whether or not there are any messages for this peer
+    def check_for_messages_over_network(self):
+
+        while True:
+
+            start = time.time()
+
+            # connect to server and check if we have any messages waiting
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            s.connect((self.server_ip, self.server_port))
+
+            msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
+
+            data = pickle.dumps(msg)
+
+            s.end(data)
+
+            ret_val = s.recv(409600)
+
+            return_data = pickle.loads(ret_val)
+
+            for tup in return_data:
+                sender = tup[0]
+                png = tup[1]
+
+                self.handle_image(png, sender)
+
+            end = time.time()
+
+            time.sleep(3 - (end - start))
+
     def leave_server(self):
         # tell server we're leaving
         msg = {'type': 'QUIT', 'port': self.port}
@@ -242,7 +292,8 @@ except Exception:
     local_port = 4444
     nickname = '???'
 
-cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9999, "name": nickname}
+cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9999, "name": nickname,
+       "mode": 'INTERNET'}
 
 p = Peer(cfg)
 p.setDaemon(True)  # allows use of CTRL+C to exit program

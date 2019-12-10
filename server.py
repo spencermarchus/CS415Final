@@ -41,6 +41,9 @@ class Server(threading.Thread):
         # Re-use the socket
         self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+        # when operating in centralized-server mode, maintain mailboxes
+        self.mailboxes = {}
+
         # bind the socket to a public host, and a port
         self.serverSocket.bind((host, port))
 
@@ -148,6 +151,59 @@ class Server(threading.Thread):
             del self.clients[index]
 
             print('Removed '+index+' due to QUIT command. . .')
+
+        if req_type == "MSG_CHECK":
+            # check if the peer has any messages waiting
+            # assume that the peer is not on the same LAN as the server
+            local_ip = info['local_ip']
+            ip = h
+            port = info['port']
+
+            if ip == local_ip:
+                # operating in internet mode on LAN for some reason - refer to peer using its local IP
+                index = local_ip+':'+port
+
+            else:
+                # truly operating over the internet - refer to peer using IP not local IP
+                index = ip + ':' + port
+
+            if self.mailboxes.get(index) is not None:
+                return_data = []
+                for tup in self.mailboxes[index]:
+                    return_data.append((tup[0], tup[1]))
+
+                del self.mailboxes[index]  # messages will be sent to user, so remove them from central server
+
+                data = pickle.dumps(return_data)
+                clientSocket.send(data)
+
+            else:
+                return # take no further action
+
+
+
+        if req_type == "INTERNET_MSG":
+            # message is to be sent to clients over network
+            ip = h
+            local_ip = info['local_ip']
+            port = info['port']
+            sender = info['sender']
+            png = info['data']
+
+            if ip == local_ip:
+                # operating in internet mode on LAN for some reason but continue
+                index = local_ip + ':' + port
+
+            else:
+                # truly operating over the internet - use IP not Local IP
+                index = ip + ':' + port
+
+            for key in self.mailboxes:
+                if key != index: # don't send to yourself
+                    self.mailboxes[key].append(sender, png)
+
+
+
 
         clientSocket.close()
 
