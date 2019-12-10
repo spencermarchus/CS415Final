@@ -127,7 +127,7 @@ class Peer(threading.Thread):
                 if ip+str(port) != self.local_ipv4+str(self.port):
 
                     d = threading.Thread(name='client',
-                                         target=self.send_image, args=(IP, port, png, sender_name))
+                                         target=self.send_image, args=(ip, port, png, sender_name))
 
                     d.setDaemon(True)  # can run in background
                     d.start()
