@@ -211,7 +211,7 @@ class Peer(threading.Thread):
 
             # wait about 15 seconds and do it again
             end = time.time()
-            time.sleep(100 - (end - start))
+            time.sleep(30 - (end - start))
 
     # pings a central server and checks whether or not there are any messages for this peer
     def check_for_messages_over_network(self):
