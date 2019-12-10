@@ -138,10 +138,10 @@ class Server(threading.Thread):
         data = b''
 
         while True:
-            part = clientSocket.recv(8192)
+            part = clientSocket.recv(4096)
             data += part
 
-            if len(part) < 8192:
+            if len(part) <= 0:
                 break
 
         info = pickle.loads(data)
