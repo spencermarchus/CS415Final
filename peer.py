@@ -133,7 +133,7 @@ class Peer(threading.Thread):
                 print("SENDING IMAGE TO " + IP + ':' + str(port))
 
     # image sending method that makes the socket connection and sends the image
-    def send_image(self, IP, port, png, sender_name, local_ip, msg_type='IMAGE'):
+    def send_image(self, IP, port, png, sender_name, local_ip= '', msg_type='IMAGE'):
         try:
             # create socket connection
             img_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -315,7 +315,7 @@ except Exception:
     nickname = '???'
 
 cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9998, "name": nickname,
-       "mode": 'INTERNET'}
+       "mode": 'LAN'}
 
 p = Peer(cfg)
 p.setDaemon(True)  # allows use of CTRL+C to exit program
