@@ -292,7 +292,7 @@ except Exception:
     local_port = 4444
     nickname = '???'
 
-cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9999, "name": nickname,
+cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9998, "name": nickname,
        "mode": 'INTERNET'}
 
 p = Peer(cfg)
