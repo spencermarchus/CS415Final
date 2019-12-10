@@ -214,7 +214,7 @@ class Server(threading.Thread):
 
             for key in self.mailboxes:
                 if key != index: # don't send to yourself
-                    self.mailboxes[key].append(sender, png)
+                    self.mailboxes[key].append((sender, png))
 
 
 
