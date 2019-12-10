@@ -16,7 +16,7 @@ host = ''
 
 class Peer(threading.Thread):
 
-    def __init__(self, config, mode):
+    def __init__(self, config):
 
         super(Peer, self).__init__()
 
@@ -229,7 +229,7 @@ class Peer(threading.Thread):
 
             data = pickle.dumps(msg)
 
-            s.end(data)
+            s.send(data)
 
             ret_val = s.recv(409600)
 

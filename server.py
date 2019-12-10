@@ -161,11 +161,11 @@ class Server(threading.Thread):
 
             if ip == local_ip:
                 # operating in internet mode on LAN for some reason - refer to peer using its local IP
-                index = local_ip+':'+port
+                index = local_ip+':'+str(port)
 
             else:
                 # truly operating over the internet - refer to peer using IP not local IP
-                index = ip + ':' + port
+                index = ip + ':' + str(port)
 
             if self.mailboxes.get(index) is not None:
                 return_data = []
@@ -192,11 +192,11 @@ class Server(threading.Thread):
 
             if ip == local_ip:
                 # operating in internet mode on LAN for some reason but continue
-                index = local_ip + ':' + port
+                index = local_ip + ':' + str(port)
 
             else:
                 # truly operating over the internet - use IP not Local IP
-                index = ip + ':' + port
+                index = ip + ':' + str(port)
 
             for key in self.mailboxes:
                 if key != index: # don't send to yourself
