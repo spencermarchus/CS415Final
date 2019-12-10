@@ -7,7 +7,7 @@ import threading
 import datetime
 import time
 import _pickle as pickle
-from multiprocessing.connection import Listener
+
 
 host = ''
 port = 9998
@@ -38,17 +38,15 @@ class Server(threading.Thread):
         self.serverSocket = Listener(('', port))
 
         # Re-use the socket
-        # self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # when operating in centralized-server mode, maintain mailboxes
         self.mailboxes = {}
 
         # bind the socket to a public host, and a port
-        # self.serverSocket.bind((host, port))
+        self.serverSocket.bind((host, port))
 
-        # self.serverSocket.listen(50)  # become a server socket
-
-        self.client_dict_lock = threading.Lock()
+        self.serverSocket.listen(50)  # become a server socket
         self.clients = {}
 
     def run(self):
@@ -60,10 +58,10 @@ class Server(threading.Thread):
 
         while True:
             # Establish the connection
-            conn = self.serverSocket.accept()
+            (clientSocket, client_address) = self.serverSocket.accept()
 
             d = threading.Thread(name='client',
-                                 target=self.server_thread, args=(conn,))
+                                 target=self.server_thread, args=(clientSocket, client_address))
             d.setDaemon(True)
             d.start()
 
@@ -132,27 +130,26 @@ class Server(threading.Thread):
 
             self.client_dict_lock.release()
 
-    def server_thread(self, clientSocket):
+    def server_thread(self, clientSocket, client_addr):
         print('\nHandling client connection. . .')
 
         # get the request from browser
-        # data = b''
-        #
-        # while True:
-        #     part = clientSocket.recv(128)
-        #     data += part
-        #
-        #     if len(part) < 128:
-        #         data += part
-        #         break
+        data = b''
 
-        info = clientSocket.recv()
+        while True:
+            part = clientSocket.recv(128)
+            data += part
+
+            if len(part) < 128:
+                data += part
+                break
+
+        info = pickle.loads(data)
 
         # str_data = data.decode()
 
         # the connected client's IP addr
-        #h, p = clientSocket.getpeername()
-
+        h, p = clientSocket.getpeername()
 
         print('\nMessage from client: ')
         print(info)
@@ -161,7 +158,7 @@ class Server(threading.Thread):
 
         if req_type == 'KEEP_ALIVE':
             # update the time which we have last seen this client
-            client_info = {'IP': 'TEST', 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip']}
+            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip']}
             self.update_peer(client_info)
 
         if req_type == 'REQUEST_PEER_DICT':
@@ -171,7 +168,7 @@ class Server(threading.Thread):
         if req_type == 'QUIT':
 
             # remove client from peers dict
-            index = 'TEST'+':'+str(info['port'])
+            index = h+':'+str(info['port'])
             del self.clients[index]
 
             print('Removed '+index+' due to QUIT command. . .')
@@ -180,7 +177,7 @@ class Server(threading.Thread):
             # check if the peer has any messages waiting
             # assume that the peer is not on the same LAN as the server
             local_ip = info['local_ip']
-            ip = 'TEST'
+            ip = h
             port = info['port']
 
             if ip == local_ip:
@@ -200,7 +197,7 @@ class Server(threading.Thread):
                 self.mailboxes[index] = []  # messages will be sent to user, so remove them from central server
 
                 data = pickle.dumps(return_data)
-                clientSocket.send(return_data)
+                clientSocket.sendall(data)
 
             else:
                 return # take no further action
