@@ -60,10 +60,10 @@ class Server(threading.Thread):
 
         while True:
             # Establish the connection
-            (clientSocket, client_address) = self.serverSocket.accept()
+            conn = self.serverSocket.accept()
 
             d = threading.Thread(name='client',
-                                 target=self.server_thread, args=(clientSocket, client_address))
+                                 target=self.server_thread, args=(conn,))
             d.setDaemon(True)
             d.start()
 
@@ -132,7 +132,7 @@ class Server(threading.Thread):
 
             self.client_dict_lock.release()
 
-    def server_thread(self, clientSocket, client_addr):
+    def server_thread(self, clientSocket):
         print('\nHandling client connection. . .')
 
         # get the request from browser
