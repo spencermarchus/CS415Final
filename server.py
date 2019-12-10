@@ -59,13 +59,20 @@ class Server(threading.Thread):
         print('Server started!')
 
         while True:
-            # Establish the connection
-            (clientSocket, client_address) = self.serverSocket.accept()
 
-            d = threading.Thread(name='client',
-                                 target=self.server_thread, args=(clientSocket, client_address))
-            d.setDaemon(True)
-            d.start()
+            try:
+                # Establish the connection
+                (clientSocket, client_address) = self.serverSocket.accept()
+
+                d = threading.Thread(name='client',
+                                     target=self.server_thread, args=(clientSocket, client_address))
+                d.setDaemon(True)
+                d.start()
+
+            except Exception as e:
+                print(e)
+
+
 
     # this would get called whenever a client pings the server to tell it that it's alive
     def update_peer(self, client_info):

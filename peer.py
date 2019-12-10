@@ -115,7 +115,7 @@ class Peer(threading.Thread):
             self.handle_image(png, "Me")
 
             # iterate over peers and send the image in separate threads
-            
+
             for p in client_dict:
 
                 ip = p['local_ip']
