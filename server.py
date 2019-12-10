@@ -207,8 +207,6 @@ class Server(threading.Thread):
             else:
                 return # take no further action
 
-
-
         if req_type == "INTERNET_MSG":
             # message is to be sent to clients over network
             ip = h

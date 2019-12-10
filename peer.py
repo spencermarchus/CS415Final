@@ -38,11 +38,6 @@ class Peer(threading.Thread):
         keep_alive.setDaemon(True)
         keep_alive.start()
 
-        if self.mode == "INTERNET":
-            # need to fetch messages from server
-            msg_check_thread = threading.Thread(name='msg_check', target=self.check_for_messages_over_network, args=())
-            msg_check_thread.setDaemon(True)
-            msg_check_thread.start()
 
         self.peer_list_lock = threading.Lock()
 
@@ -120,17 +115,21 @@ class Peer(threading.Thread):
             self.handle_image(png, "Me")
 
             # iterate over peers and send the image in separate threads
+            
             for p in client_dict:
-                # if p.get("port") != self.port:
-                IP = p.get("local_ip")
-                port = p.get("port")
-                d = threading.Thread(name='client',
-                                     target=self.send_image, args=(IP, port, png, sender_name))
 
-                d.setDaemon(True)  # can run in background
-                d.start()
+                ip = p['local_ip']
+                port = p['port']
 
-                print("SENDING IMAGE TO " + IP + ':' + str(port))
+                if ip+str(port) != self.local_ipv4+str(self.port):
+
+                    d = threading.Thread(name='client',
+                                         target=self.send_image, args=(IP, port, png, sender_name))
+
+                    d.setDaemon(True)  # can run in background
+                    d.start()
+
+                    print("SENDING IMAGE TO " + ip + ':' + str(port))
 
     # image sending method that makes the socket connection and sends the image
     def send_image(self, IP, port, png, sender_name, local_ip= '', msg_type='IMAGE'):
@@ -220,7 +219,8 @@ class Peer(threading.Thread):
             self.server_comms_lock.release()
 
 
-            self.check_for_messages_over_network()
+            if self.mode == "INTERNET":
+                self.check_for_messages_over_network()
 
 
             time.sleep(2)
