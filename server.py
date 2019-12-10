@@ -135,9 +135,10 @@ class Server(threading.Thread):
         print('\nHandling client connection. . .')
 
         # get the request from browser
-        data = clientSocket.recv(4096)
+        data = clientSocket.recv(409600)
 
         info = pickle.loads(data)
+
         # str_data = data.decode()
 
         # the connected client's IP addr

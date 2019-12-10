@@ -25,6 +25,8 @@ class Peer(threading.Thread):
         self.server_ip = config["SERVER_IP"]
         self.server_port = config["SERVER_PORT"]
 
+        self.server_comms_lock = threading.Lock()
+
         self.images_received = []
 
         self.mode = config['mode']
@@ -197,6 +199,7 @@ class Peer(threading.Thread):
     def ping_server_periodically(self):
         print('Pinging server. . .')
         while True:
+            self.server_comms_lock.acquire()
             start = time.time()
             # open socket to server
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -211,6 +214,7 @@ class Peer(threading.Thread):
 
             # wait about 15 seconds and do it again
             end = time.time()
+            self.server_comms_lock.release()
             time.sleep(30 - (end - start))
 
     # pings a central server and checks whether or not there are any messages for this peer
@@ -218,6 +222,7 @@ class Peer(threading.Thread):
 
         while True:
             #try:
+                self.server_comms_lock.acquire()
                 start = time.time()
 
                 # connect to server and check if we have any messages waiting
@@ -242,13 +247,16 @@ class Peer(threading.Thread):
 
                     self.handle_image(png, sender)
 
+
             # except Exception as e:
             #     print(e, " REE")
             #     pass
             #
             # finally:
                 end = time.time()
+                self.server_comms_lock.release()
                 time.sleep(3)
+
     def leave_server(self):
         # tell server we're leaving
         msg = {'type': 'QUIT', 'port': self.port}
@@ -261,6 +269,7 @@ class Peer(threading.Thread):
 
     def get_active_peers(self):
         # get list of all active peers from server
+        self.server_comms_lock.acquire()
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.server_ip, self.server_port))
         print('Connected to server, requesting list of peers')
@@ -279,6 +288,7 @@ class Peer(threading.Thread):
 
         print("RECEIVED CLIENT DICT FROM SERVER. . .")
         print(return_data)
+        self.server_comms_lock.release()
         return return_data
 
     def check_exit_flag(self):
