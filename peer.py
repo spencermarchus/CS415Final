@@ -217,7 +217,7 @@ class Peer(threading.Thread):
     def check_for_messages_over_network(self):
 
         while True:
-            try:
+            #try:
                 start = time.time()
 
                 # connect to server and check if we have any messages waiting
@@ -231,21 +231,25 @@ class Peer(threading.Thread):
 
                 s.send(data)
 
-                ret_val = s.recv(409600)
+                ret_val = s.recv(4096000)
 
                 return_data = pickle.loads(ret_val)
 
+                i = 0
                 for tup in return_data:
+                    if i == 0:
+                        i+=1
+                        continue
                     sender = tup[0]
                     png = tup[1]
 
                     self.handle_image(png, sender)
 
-            except Exception as e:
-                print(e)
-                pass
-
-            finally:
+            # except Exception as e:
+            #     print(e, " REE")
+            #     pass
+            #
+            # finally:
                 end = time.time()
                 time.sleep(3)
     def leave_server(self):

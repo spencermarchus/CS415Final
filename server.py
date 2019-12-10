@@ -181,12 +181,12 @@ class Server(threading.Thread):
                 index = ip + ':' + str(port)
 
             if self.mailboxes.get(index) is not None:
-                print("RETURNING IMAGE")
-                return_data = []
+                return_data = ['blah']
                 for tup in self.mailboxes[index]:
+                    print("RETURNING IMAGE")
                     return_data.append((tup[0], tup[1]))
 
-                del self.mailboxes[index]  # messages will be sent to user, so remove them from central server
+                self.mailboxes[index] = []  # messages will be sent to user, so remove them from central server
 
                 data = pickle.dumps(return_data)
                 clientSocket.send(data)
