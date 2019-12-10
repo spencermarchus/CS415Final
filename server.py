@@ -38,15 +38,15 @@ class Server(threading.Thread):
         self.serverSocket = Listener(('', port))
 
         # Re-use the socket
-        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # when operating in centralized-server mode, maintain mailboxes
         self.mailboxes = {}
 
         # bind the socket to a public host, and a port
-        self.serverSocket.bind((host, port))
+        # self.serverSocket.bind((host, port))
 
-        self.serverSocket.listen(50)  # become a server socket
+        # self.serverSocket.listen(50)  # become a server socket
         self.clients = {}
 
     def run(self):
