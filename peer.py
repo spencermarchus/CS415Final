@@ -322,7 +322,7 @@ except Exception:
     nickname = '???'
 
 cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9998, "name": nickname,
-       "mode": 'LAN'}
+       "mode": 'INTERNET'}
 
 p = Peer(cfg)
 p.setDaemon(True)  # allows use of CTRL+C to exit program
