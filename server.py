@@ -35,7 +35,9 @@ class Server(threading.Thread):
         self.CLIENT_TIMEOUT_MINS = 2
 
         # Create a TCP socket
-        self.serverSocket = Listener(('', port))
+        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.client_dict_lock = threading.Lock()
 
         # Re-use the socket
         self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
