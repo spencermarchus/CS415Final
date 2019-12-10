@@ -10,7 +10,7 @@ import gui2
 import tkinter as tk
 from tkinter import *
 import datetime
-from multiprocessing import Client
+from multiprocessing.connection import Client
 
 host = ''
 

@@ -7,7 +7,7 @@ import threading
 import datetime
 import time
 import _pickle as pickle
-
+from multiprocessing.connection import Listener
 
 host = ''
 port = 9998
@@ -35,9 +35,7 @@ class Server(threading.Thread):
         self.CLIENT_TIMEOUT_MINS = 2
 
         # Create a TCP socket
-        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        self.client_dict_lock = threading.Lock()
+        self.serverSocket = Listener(('', port))
 
         # Re-use the socket
         self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
