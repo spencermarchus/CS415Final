@@ -233,13 +233,10 @@ class Peer(threading.Thread):
 
                 ret_val = s.recv(5000000)
 
-                return_data = pickle.loads(ret_val)
+                return_data = pickle.loads(ret_val)['data']
 
-                i = 0
                 for tup in return_data:
-                    if i == 0:
-                        i+=1
-                        continue
+
                     sender = tup[0]
                     png = tup[1]
 
