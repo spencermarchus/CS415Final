@@ -236,7 +236,7 @@ class Peer(threading.Thread):
 
                 s.send(msg)
 
-                ret_val = s.recv(5000000)
+                ret_val = s.recv()
 
                 return_data = pickle.loads(ret_val)['data']
 
