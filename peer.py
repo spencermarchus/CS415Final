@@ -54,15 +54,18 @@ class Peer(threading.Thread):
         self.serverSocket.listen(10)
 
         while True:
-            # handle incoming connections
+            try:
+                # handle incoming connections
 
-            # Establish the connection
-            (clientSocket, client_address) = self.serverSocket.accept()
+                # Establish the connection
+                (clientSocket, client_address) = self.serverSocket.accept()
 
-            d = threading.Thread(name='client',
-                                 target=self.peer_thread, args=(clientSocket, client_address))
-            d.setDaemon(True)  # can run in background, will not prevent program from closing
-            d.start()
+                d = threading.Thread(name='client',
+                                     target=self.peer_thread, args=(clientSocket, client_address))
+                d.setDaemon(True)  # can run in background, will not prevent program from closing
+                d.start()
+            except Exception as e:
+                print(e)
 
     def peer_thread(self, client_sock, client_addr):
         # handle receiving an image
@@ -201,29 +204,33 @@ class Peer(threading.Thread):
     def ping_server_periodically(self):
         print('Pinging server. . .')
         while True:
-            self.server_comms_lock.acquire()
-            start = time.time()
-            # open socket to server
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                self.server_comms_lock.acquire()
+                start = time.time()
+                # open socket to server
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            s.connect((self.server_ip, self.server_port))
+                s.connect((self.server_ip, self.server_port))
 
-            msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4}
+                msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4}
 
-            # pickle the dict and send it to server
-            s.sendall(pickle.dumps(msg))
-            s.close()
+                # pickle the dict and send it to server
+                s.sendall(pickle.dumps(msg))
+                s.close()
 
-            # wait and do it again
-            end = time.time()
-            self.server_comms_lock.release()
-
-
-            if self.mode == "INTERNET":
-                self.check_for_messages_over_network()
+                # wait and do it again
+                end = time.time()
+                self.server_comms_lock.release()
 
 
-            time.sleep(2)
+                if self.mode == "INTERNET":
+                    self.check_for_messages_over_network()
+
+
+                time.sleep(2.5)
+
+            except Exception as e:
+                print(e)
 
     # pings a central server and checks whether or not there are any messages for this peer
     def check_for_messages_over_network(self):
