@@ -9,7 +9,7 @@ import time
 import _pickle as pickle
 
 host = ''
-port = 9999
+port = 9998
 
 
 # only one thread can modify the dict at one time
