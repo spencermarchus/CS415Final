@@ -79,6 +79,19 @@ class Server(threading.Thread):
             nickname = client_info['nickname']
             local_ip = client_info['local_ip']
 
+            # create a mailbox for this user
+
+            if ip_addr == local_ip:
+                # operating in LAN mode but using mailboxes?
+                index = local_ip + ':' + str(port_no)
+
+            else:
+                # operating over internet
+                index = ip_addr + ':' + str(port_no)
+
+            if self.mailboxes.get(index) is None:
+                self.mailboxes[index] = []  # create mailbox for user
+
             index = ip_addr + ':' + str(port_no)
 
             # acquire lock to make sure we don't corrupt dict - this runs in little time, no expected perf impact
