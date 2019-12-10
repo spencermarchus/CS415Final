@@ -141,7 +141,7 @@ class Server(threading.Thread):
             part = clientSocket.recv(4096)
             data += part
 
-            if len(part) <= 4096:
+            if len(part) < 4096:
                 data += part
                 break
 
