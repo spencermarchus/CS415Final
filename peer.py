@@ -10,6 +10,7 @@ import gui2
 import tkinter as tk
 from tkinter import *
 import datetime
+from multiprocessing import Client
 
 host = ''
 
@@ -135,8 +136,10 @@ class Peer(threading.Thread):
     def send_image(self, IP, port, png, sender_name, local_ip, msg_type='IMAGE'):
         try:
             # create socket connection
-            img_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            img_s.connect((IP, port))
+            # img_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # img_s.connect((IP, port))
+
+            img_s = Client((IP, port))
 
             # print which peer is connected
             print('Connected to Peer: ' + sender_name)
@@ -148,7 +151,7 @@ class Peer(threading.Thread):
                 msg['local_ip'] = local_ip
 
             # pickle the dict and send it
-            img_s.send(pickle.dumps(msg))
+            img_s.send(msg)
             img_s.close()
 
         except Exception as e:
@@ -205,14 +208,12 @@ class Peer(threading.Thread):
             self.server_comms_lock.acquire()
             start = time.time()
             # open socket to server
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-            s.connect((self.server_ip, self.server_port))
+            s = Client((self.server_ip, self.server_port))
 
             msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4}
 
             # pickle the dict and send it to server
-            s.sendall(pickle.dumps(msg))
+            s.send(msg)
             s.close()
 
             # wait about 15 seconds and do it again
@@ -229,15 +230,11 @@ class Peer(threading.Thread):
                 start = time.time()
 
                 # connect to server and check if we have any messages waiting
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-                s.connect((self.server_ip, self.server_port))
+                s = Client((self.server_ip, self.server_port))
 
                 msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
 
-                data = pickle.dumps(msg)
-
-                s.sendall(data)
+                s.send(msg)
 
                 ret_val = s.recv(5000000)
 
