@@ -42,7 +42,7 @@ class Server(threading.Thread):
         self.client_dict_lock = threading.Lock()
 
         # Re-use the socket
-        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # when operating in centralized-server mode, maintain mailboxes
         self.mailboxes = {}
