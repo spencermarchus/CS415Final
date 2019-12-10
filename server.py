@@ -65,7 +65,7 @@ class Server(threading.Thread):
             conn = self.serverSocket.accept()
 
             d = threading.Thread(name='client',
-                                 target=self.server_thread, args=(conn))
+                                 target=self.server_thread, args=(conn,))
             d.setDaemon(True)
             d.start()
 
