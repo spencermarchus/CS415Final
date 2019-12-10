@@ -151,7 +151,8 @@ class Server(threading.Thread):
         # str_data = data.decode()
 
         # the connected client's IP addr
-        h, p = clientSocket.getpeername()
+        #h, p = clientSocket.getpeername()
+
 
         print('\nMessage from client: ')
         print(info)
@@ -179,7 +180,7 @@ class Server(threading.Thread):
             # check if the peer has any messages waiting
             # assume that the peer is not on the same LAN as the server
             local_ip = info['local_ip']
-            ip = h
+            ip = 'TEST'
             port = info['port']
 
             if ip == local_ip:
@@ -199,7 +200,7 @@ class Server(threading.Thread):
                 self.mailboxes[index] = []  # messages will be sent to user, so remove them from central server
 
                 data = pickle.dumps(return_data)
-                clientSocket.sendall(data)
+                clientSocket.send(return_data)
 
             else:
                 return # take no further action
