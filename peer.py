@@ -137,7 +137,7 @@ class Peer(threading.Thread):
             print('Connected to Peer: ' + sender_name)
 
             # send the message along with the type, image, and the sender
-            msg = {'type': msg_type, 'data': png, 'sender': sender_name}
+            msg = {'type': msg_type, 'data': png, 'sender': sender_name, 'port': self.port}
 
             if self.mode == "INTERNET":
                 msg['local_ip'] = local_ip
@@ -247,7 +247,7 @@ class Peer(threading.Thread):
 
             finally:
                 end = time.time()
-                time.sleep(3 - (end - start))
+                time.sleep(3)
     def leave_server(self):
         # tell server we're leaving
         msg = {'type': 'QUIT', 'port': self.port}
