@@ -45,6 +45,11 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # self.colorCanvas.config(bg=self.color[1])
         self.button4.config(bg=self.color[1])
 
+    def newBGColor(self):
+        self.bgColor = colorchooser.askcolor()
+        self.button6.config(bg=self.bgColor[1])
+        self.canvas.config(bg=self.bgColor[1])
+
     def flashColor(self, object, color_index):
         object.config(background=self.bg_flash_colors[color_index])
         # object.config(foreground=self.fg_flash_colors[color_index])
@@ -92,6 +97,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
         # default color
         self.color = [' ', 'pink']
+        self.bgColor = [' ', 'white']
 
         # populate our gui
         # canvas object
@@ -107,12 +113,10 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.button2 = tk.Button(self.gui, text="Leave Chat Room", width=28, height=2, fg="red", activeforeground="red",
                                  command=self.leaveChat)
         self.button2.place(x=980, y=560)
-        # incoming messages button - commented out since, for now, the message viewing GUI comes up automatically
-        # self.button3 = tk.Button(self.gui, text="Incoming Messages", width=28, height=4, activebackground="red",
-        #                          activeforeground="white")
+
         # self.button3.place(x=980, y=13)
         # select color button
-        self.button4 = tk.Button(self.gui, text="Select A New Color", width=28, height=3, command=self.newColor, bg=self.color[1])
+        self.button4 = tk.Button(self.gui, text="Brush Color", width=28, height=3, command=self.newColor, bg=self.color[1])
         self.button4.place(x=980, y=190)
         # selected color display label
         # self.label1 = Label(self.gui, text="Current Color")
@@ -120,6 +124,11 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # label for brush size
         self.label2 = Label(self.gui, text="Brush Size")
         self.label2.place(x=1050, y=100)
+
+        self.button6 = tk.Button(self.gui, text="Background Color", width=28, height=3, command=self.newBGColor,
+                                 bg=self.bgColor[1])
+        self.button6.place(x=980, y=255)
+
         # selected color display viewable color
         # self.colorCanvas = Canvas(self.gui, bg=self.color[1], width=203, height=50)
         # self.colorCanvas.place(x=980, y=190)
@@ -129,7 +138,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.w1.place(x=980, y=115)
         # clear button
         self.button5 = tk.Button(self.gui, text="Clear Drawing", width=28, height=3, command=self.clearCanvas)
-        self.button5.place(x=980, y=255)
+        self.button5.place(x=980, y=350)
 
         # if we have messages run this line
         # self.flashColor(self.button3, 0)
@@ -150,6 +159,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
     def save_as_png(self, fileName):
         # save postscipt image
+        
         self.canvas.postscript(file=fileName + '.eps')
         # use PIL to convert to PNG
         img = Image.open(fileName + '.eps')
