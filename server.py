@@ -7,6 +7,7 @@ import threading
 import datetime
 import time
 import _pickle as pickle
+from multiprocessing.connection import Listener
 
 host = ''
 port = 9998
@@ -34,7 +35,9 @@ class Server(threading.Thread):
         self.CLIENT_TIMEOUT_MINS = 2
 
         # Create a TCP socket
-        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.serverSocket = Listener(('', port))
 
         self.client_dict_lock = threading.Lock()
 
@@ -45,9 +48,9 @@ class Server(threading.Thread):
         self.mailboxes = {}
 
         # bind the socket to a public host, and a port
-        self.serverSocket.bind((host, port))
+        # self.serverSocket.bind((host, port))
 
-        self.serverSocket.listen(50)  # become a server socket
+        # self.serverSocket.listen(50)  # become a server socket
         self.clients = {}
 
     def run(self):
@@ -59,10 +62,10 @@ class Server(threading.Thread):
 
         while True:
             # Establish the connection
-            (clientSocket, client_address) = self.serverSocket.accept()
+            conn = self.serverSocket.accept()
 
             d = threading.Thread(name='client',
-                                 target=self.server_thread, args=(clientSocket, client_address))
+                                 target=self.server_thread, args=(conn))
             d.setDaemon(True)
             d.start()
 
@@ -131,22 +134,12 @@ class Server(threading.Thread):
 
             self.client_dict_lock.release()
 
-    def server_thread(self, clientSocket, client_addr):
+    def server_thread(self, clientSocket):
         print('\nHandling client connection. . .')
 
-        # get the request from browser
-        data = b''
-
-        while True:
-            part = clientSocket.recv(128)
-            data += part
-
-            if len(part) < 128:
-                data += part
-                break
-
-        info = pickle.loads(data)
-
+        # get the request - unpickled
+        info = clientSocket.recv()
+        print("REE RECEIVED DATA")
         # str_data = data.decode()
 
         # the connected client's IP addr
