@@ -169,6 +169,9 @@ class Server(threading.Thread):
 
         if req_type == 'QUIT':
 
+            for key in self.clients:
+                print(key)
+
             # remove client from peers dict
             index = h+':'+str(info['port'])
             del self.clients[index]

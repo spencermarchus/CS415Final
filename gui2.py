@@ -56,7 +56,6 @@ class Image_Display_GUI(threading.Thread):
 
                     self.canvas.create_image((2, 2), anchor=NW, image=photoimg)
 
-                    print('UPDATED CANVAS')
                     needs_updated_flag = False
 
                 # if there has been an update to the message list, update the listbox
@@ -82,7 +81,7 @@ class Image_Display_GUI(threading.Thread):
                     except Exception as e:
                         self.Listbox.selection_set(first='end')
 
-                    print('UPDATED LISTBOX')
+
 
             except Exception as e:
                 print(e)

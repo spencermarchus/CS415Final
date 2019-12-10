@@ -140,7 +140,6 @@ class Peer(threading.Thread):
             img_s.connect((IP, port))
 
             # print which peer is connected
-            print('Connected to Peer: ' + sender_name)
 
             # send the message along with the type, image, and the sender
             msg = {'type': msg_type, 'data': png, 'sender': sender_name, 'port': self.port}
@@ -216,15 +215,20 @@ class Peer(threading.Thread):
             s.sendall(pickle.dumps(msg))
             s.close()
 
-            # wait about 15 seconds and do it again
+            # wait and do it again
             end = time.time()
             self.server_comms_lock.release()
-            time.sleep(10 - (end - start))
+
+
+            self.check_for_messages_over_network()
+
+
+            time.sleep(2)
 
     # pings a central server and checks whether or not there are any messages for this peer
     def check_for_messages_over_network(self):
 
-        while True:
+        # while True:
             #try:
                 self.server_comms_lock.acquire()
                 start = time.time()
