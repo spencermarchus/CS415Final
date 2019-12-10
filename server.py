@@ -7,7 +7,7 @@ import threading
 import datetime
 import time
 import _pickle as pickle
-from multiprocessing.connection import Listener
+
 
 host = ''
 port = 9998
@@ -35,22 +35,20 @@ class Server(threading.Thread):
         self.CLIENT_TIMEOUT_MINS = 2
 
         # Create a TCP socket
-        # self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        self.serverSocket = Listener(('', port))
+        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self.client_dict_lock = threading.Lock()
 
         # Re-use the socket
-        # self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # when operating in centralized-server mode, maintain mailboxes
         self.mailboxes = {}
 
         # bind the socket to a public host, and a port
-        # self.serverSocket.bind((host, port))
+        self.serverSocket.bind((host, port))
 
-        # self.serverSocket.listen(50)  # become a server socket
+        self.serverSocket.listen(50)  # become a server socket
         self.clients = {}
 
     def run(self):
@@ -62,10 +60,10 @@ class Server(threading.Thread):
 
         while True:
             # Establish the connection
-            conn = self.serverSocket.accept()
+            (clientSocket, client_address) = self.serverSocket.accept()
 
             d = threading.Thread(name='client',
-                                 target=self.server_thread, args=(conn))
+                                 target=self.server_thread, args=(clientSocket, client_address))
             d.setDaemon(True)
             d.start()
 
@@ -134,12 +132,22 @@ class Server(threading.Thread):
 
             self.client_dict_lock.release()
 
-    def server_thread(self, clientSocket):
+    def server_thread(self, clientSocket, client_addr):
         print('\nHandling client connection. . .')
 
-        # get the request - unpickled
-        info = clientSocket.recv()
-        print("REE RECEIVED DATA")
+        # get the request from browser
+        data = b''
+
+        while True:
+            part = clientSocket.recv(128)
+            data += part
+
+            if len(part) < 128:
+                data += part
+                break
+
+        info = pickle.loads(data)
+
         # str_data = data.decode()
 
         # the connected client's IP addr
