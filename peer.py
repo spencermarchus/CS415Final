@@ -148,7 +148,7 @@ class Peer(threading.Thread):
                 msg['local_ip'] = local_ip
 
             # pickle the dict and send it
-            img_s.sendall(pickle.dumps(msg))
+            img_s.send(pickle.dumps(msg))
             img_s.close()
 
         except Exception as e:
@@ -218,7 +218,7 @@ class Peer(threading.Thread):
             # wait about 15 seconds and do it again
             end = time.time()
             self.server_comms_lock.release()
-            time.sleep(30 - (end - start))
+            time.sleep(10 - (end - start))
 
     # pings a central server and checks whether or not there are any messages for this peer
     def check_for_messages_over_network(self):
