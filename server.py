@@ -47,6 +47,8 @@ class Server(threading.Thread):
         # self.serverSocket.bind((host, port))
 
         # self.serverSocket.listen(50)  # become a server socket
+
+        self.client_dict_lock = threading.Lock()
         self.clients = {}
 
     def run(self):
