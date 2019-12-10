@@ -125,7 +125,7 @@ class Server(threading.Thread):
 
             # send dict to peer's socket
             response = pickle.dumps(return_list)
-            peer_socket.send(response)
+            peer_socket.sendall(response)
 
         finally:
 
@@ -135,7 +135,7 @@ class Server(threading.Thread):
         print('\nHandling client connection. . .')
 
         # get the request from browser
-        data = clientSocket.recv(409600)
+        data = clientSocket.recv(4096000)
 
         info = pickle.loads(data)
 
@@ -190,7 +190,7 @@ class Server(threading.Thread):
                 self.mailboxes[index] = []  # messages will be sent to user, so remove them from central server
 
                 data = pickle.dumps(return_data)
-                clientSocket.send(data)
+                clientSocket.sendall(data)
 
             else:
                 return # take no further action
@@ -216,8 +216,6 @@ class Server(threading.Thread):
             for key in self.mailboxes:
                 if key != index: # don't send to yourself
                     self.mailboxes[key].append((sender, png))
-
-
 
 
         clientSocket.close()

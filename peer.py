@@ -97,10 +97,13 @@ class Peer(threading.Thread):
 
         img_pointer.close()
 
-        if os.path.exists("outgoing.png"):
-            os.remove("outgoing.png")
-        if os.path.exists("outgoing.eps"):
-            os.remove("outgoing.eps")
+        try:
+            if os.path.exists("outgoing.png"):
+                os.remove("outgoing.png")
+            if os.path.exists("outgoing.eps"):
+                os.remove("outgoing.eps")
+        except:
+            pass
 
         if self.mode == 'INTERNET':
             # we are already in a separate thread, so simply send the image to the server for distribution
@@ -145,7 +148,7 @@ class Peer(threading.Thread):
                 msg['local_ip'] = local_ip
 
             # pickle the dict and send it
-            img_s.send(pickle.dumps(msg))
+            img_s.sendall(pickle.dumps(msg))
             img_s.close()
 
         except Exception as e:
