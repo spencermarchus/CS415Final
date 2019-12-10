@@ -217,34 +217,37 @@ class Peer(threading.Thread):
     def check_for_messages_over_network(self):
 
         while True:
+            try:
+                start = time.time()
 
-            start = time.time()
+                # connect to server and check if we have any messages waiting
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            # connect to server and check if we have any messages waiting
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect((self.server_ip, self.server_port))
 
-            s.connect((self.server_ip, self.server_port))
+                msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
 
-            msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
+                data = pickle.dumps(msg)
 
-            data = pickle.dumps(msg)
+                s.send(data)
 
-            s.send(data)
+                ret_val = s.recv(409600)
 
-            ret_val = s.recv(409600)
+                return_data = pickle.loads(ret_val)
 
-            return_data = pickle.loads(ret_val)
+                for tup in return_data:
+                    sender = tup[0]
+                    png = tup[1]
 
-            for tup in return_data:
-                sender = tup[0]
-                png = tup[1]
+                    self.handle_image(png, sender)
 
-                self.handle_image(png, sender)
+            except Exception as e:
 
-            end = time.time()
+                pass
 
-            time.sleep(3 - (end - start))
-
+            finally:
+                end = time.time()
+                time.sleep(3 - (end - start))
     def leave_server(self):
         # tell server we're leaving
         msg = {'type': 'QUIT', 'port': self.port}
