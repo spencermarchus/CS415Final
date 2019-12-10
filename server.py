@@ -181,10 +181,10 @@ class Server(threading.Thread):
                 index = ip + ':' + str(port)
 
             if self.mailboxes.get(index) is not None:
-                return_data = ['blah']
+                return_data = {'data': []}
                 for tup in self.mailboxes[index]:
-                    print("RETURNING IMAGE")
-                    return_data.append((tup[0], tup[1]))
+                    print("\nRETURNING IMAGE\n")
+                    return_data['data'].append((tup[0], tup[1]))
 
                 self.mailboxes[index] = []  # messages will be sent to user, so remove them from central server
 

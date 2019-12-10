@@ -211,7 +211,7 @@ class Peer(threading.Thread):
 
             # wait about 15 seconds and do it again
             end = time.time()
-            time.sleep(15 - (end - start))
+            time.sleep(100 - (end - start))
 
     # pings a central server and checks whether or not there are any messages for this peer
     def check_for_messages_over_network(self):
@@ -231,7 +231,7 @@ class Peer(threading.Thread):
 
                 s.send(data)
 
-                ret_val = s.recv(4096000)
+                ret_val = s.recv(5000000)
 
                 return_data = pickle.loads(ret_val)
 
