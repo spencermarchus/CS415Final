@@ -104,7 +104,7 @@ class Peer(threading.Thread):
             # we are already in a separate thread, so simply send the image to the server for distribution
             self.handle_image(png, "Me")
             self.send_image(self.server_ip, self.server_port, png, sender_name, self.local_ipv4, 'INTERNET_MSG')
-            print("SENDING IMAGE TO " + self.server_ip + ':' + self.server_port)
+            print("SENDING IMAGE TO " + self.server_ip + ':' + str(self.server_port))
 
         if self.mode == 'LAN':
 
@@ -242,7 +242,7 @@ class Peer(threading.Thread):
                     self.handle_image(png, sender)
 
             except Exception as e:
-
+                print(e)
                 pass
 
             finally:

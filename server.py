@@ -181,6 +181,7 @@ class Server(threading.Thread):
                 index = ip + ':' + str(port)
 
             if self.mailboxes.get(index) is not None:
+                print("RETURNING IMAGE")
                 return_data = []
                 for tup in self.mailboxes[index]:
                     return_data.append((tup[0], tup[1]))
