@@ -135,7 +135,14 @@ class Server(threading.Thread):
         print('\nHandling client connection. . .')
 
         # get the request from browser
-        data = clientSocket.recv(4096000)
+        data = b''
+
+        while True:
+            part = clientSocket.recv(8192)
+            data += part
+
+            if len(part) < 8192:
+                break
 
         info = pickle.loads(data)
 
