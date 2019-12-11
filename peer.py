@@ -59,7 +59,7 @@ class Peer(threading.Thread):
                 (clientSocket, client_address) = self.serverSocket.accept()
 
                 d = threading.Thread(name='client',
-                                     target=self.peer_thread, args=(clientSocket, client_address))
+                                     target=self.peer_thread, args=(clientSocket,))
                 d.setDaemon(True)  # can run in background, will not prevent program from closing
                 d.start()
             except Exception as e:
@@ -366,7 +366,7 @@ class StartGUI:
     def exit_INTERNET(self):
         global mode
         mode = 'INTERNET'
-        
+
         global nickname
         nickname = self.input.get()
 
