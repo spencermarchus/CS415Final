@@ -128,7 +128,7 @@ class Image_Display_GUI(threading.Thread):
         tabs.pack(expand=1, fill="both")
 
         style = ThemedStyle(self.gui)
-        style.set_theme("equilux")
+        style.set_theme("black")
 
         # populate our gui
         # canvas object

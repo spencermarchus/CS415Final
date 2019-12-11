@@ -394,7 +394,7 @@ class StartGUI:
 
         # buttons, labels, and fun stuff
         style = ThemedStyle(gui)
-        style.set_theme("equilux")
+        style.set_theme("black")
 
         button1 = ttk.Button(gui, text="Join LAN Chat Room",  command=self.exit_LAN)
         button1.place(x=60, y=155)

@@ -58,7 +58,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
     def newBGColor(self):
         self.bgColor = colorchooser.askcolor()
         self.button6.config(bg=self.bgColor[1])
-        self.canvas.config(bg=self.bgColor[1])
+        self.canvas.configure(bg=self.bgColor[1])
 
     def rainbowColor(self, rainbow_index):
         if self.rainbowOn:
@@ -140,12 +140,12 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # populate our gui
         # canvas object
         self.canvas = Canvas(self.gui, bg="white", width=960, height=590)
-        self.canvas.place(x=10, y=35)
+        self.canvas.place(x=10, y=10)
 
 
         # buttons
         style = ThemedStyle(self.gui)
-        style.set_theme("equilux")
+        style.set_theme("black")
 
         # send button
         self.button1 = tk.Button(self.gui, text="Send Message", width=28, height=8, fg="green",
