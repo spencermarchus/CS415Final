@@ -5,6 +5,8 @@ import time
 import tkinter as tk
 import threading
 from tkinter import *
+from ttkthemes import ThemedStyle
+from tkinter import ttk
 from PIL import Image, ImageTk
 
 
@@ -122,6 +124,11 @@ class Image_Display_GUI(threading.Thread):
         self.gui.title('Messages Received')
         self.gui.minsize(1200, 610)
         self.gui.maxsize(1200, 610)
+        tabs = ttk.Notebook(self.gui)
+        tabs.pack(expand=1, fill="both")
+
+        style = ThemedStyle(self.gui)
+        style.set_theme("equilux")
 
         # populate our gui
         # canvas object
@@ -129,16 +136,16 @@ class Image_Display_GUI(threading.Thread):
         self.canvas.place(x=10, y=10)
 
         # label for the listbox
-        self.Label1 = Label(self.gui, text="Messages")
+        self.Label1 = ttk.Label(self.gui, text="Messages")
         self.Label1.place(x=1050, y=10)
         # listbox to store our given messages
-        self.Listbox = Listbox(self.gui, width=31, height=30)
+        self.Listbox = Listbox(self.gui, width=31, height=30, bg="gray")
         self.Listbox.place(x=980, y=48)
         # scrollbar for listbox (unlikely its necessary but good for continuity)
-        self.Scrollbar1 = Scrollbar(self.gui, orient="vertical")
+        self.Scrollbar1 = ttk.Scrollbar(self.gui, orient="vertical")
         self.Scrollbar1.place(x=1175, y=48)
         # button to delete an entry from the listbox
-        self.Button1 = Button(self.gui, text="Delete Message", width=28, height=3,
+        self.Button1 = ttk.Button(self.gui, text="Delete Message",
                               command=self.delete_selected_msg)
         self.Button1.place(x=980, y=545)
 
