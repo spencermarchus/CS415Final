@@ -5,12 +5,11 @@ import threading
 import datetime
 import time
 import _pickle as pickle
-import gui
-import gui2
+from gui import *
+from gui2 import *
 import tkinter as tk
 from tkinter import *
 import datetime
-
 
 host = ''
 
@@ -37,7 +36,6 @@ class Peer(threading.Thread):
         keep_alive = threading.Thread(name='keep_alive', target=self.ping_server_periodically, args=())
         keep_alive.setDaemon(True)
         keep_alive.start()
-
 
         self.peer_list_lock = threading.Lock()
 
@@ -124,8 +122,7 @@ class Peer(threading.Thread):
                 ip = p['local_ip']
                 port = p['port']
 
-                if ip+str(port) != self.local_ipv4+str(self.port):
-
+                if ip + str(port) != self.local_ipv4 + str(self.port):
                     d = threading.Thread(name='client',
                                          target=self.send_image, args=(ip, port, png, sender_name))
 
@@ -135,7 +132,7 @@ class Peer(threading.Thread):
                     print("SENDING IMAGE TO " + ip + ':' + str(port))
 
     # image sending method that makes the socket connection and sends the image
-    def send_image(self, IP, port, png, sender_name, local_ip= '', msg_type='IMAGE'):
+    def send_image(self, IP, port, png, sender_name, local_ip='', msg_type='IMAGE'):
         try:
             # create socket connection
             img_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -222,10 +219,8 @@ class Peer(threading.Thread):
                 end = time.time()
                 self.server_comms_lock.release()
 
-
                 if self.mode == "INTERNET":
                     self.check_for_messages_over_network()
-
 
                 time.sleep(2.5)
 
@@ -236,41 +231,39 @@ class Peer(threading.Thread):
     def check_for_messages_over_network(self):
 
         # while True:
-            #try:
-                self.server_comms_lock.acquire()
-                start = time.time()
+        # try:
+        self.server_comms_lock.acquire()
+        start = time.time()
 
-                # connect to server and check if we have any messages waiting
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # connect to server and check if we have any messages waiting
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-                s.connect((self.server_ip, self.server_port))
+        s.connect((self.server_ip, self.server_port))
 
-                msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
+        msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
 
-                data = pickle.dumps(msg)
+        data = pickle.dumps(msg)
 
-                s.sendall(data)
+        s.sendall(data)
 
-                ret_val = s.recv(5000000)
+        ret_val = s.recv(5000000)
 
-                return_data = pickle.loads(ret_val)['data']
+        return_data = pickle.loads(ret_val)['data']
 
-                for tup in return_data:
+        for tup in return_data:
+            sender = tup[0]
+            png = tup[1]
 
-                    sender = tup[0]
-                    png = tup[1]
+            self.handle_image(png, sender)
 
-                    self.handle_image(png, sender)
-
-
-            # except Exception as e:
-            #     print(e, " REE")
-            #     pass
-            #
-            # finally:
-                end = time.time()
-                self.server_comms_lock.release()
-                time.sleep(3)
+        # except Exception as e:
+        #     print(e, " REE")
+        #     pass
+        #
+        # finally:
+        end = time.time()
+        self.server_comms_lock.release()
+        time.sleep(3)
 
     def leave_server(self):
         # tell server we're leaving
@@ -315,14 +308,112 @@ class Peer(threading.Thread):
 
 try:
     local_port = int(sys.argv[1])
-    nickname = str(sys.argv[2])
 except Exception:
-    print('COULDNT READ COMMAND LINE ARGS')
+    print('COULDNT READ COMMAND LINE ARG')
     local_port = 4444
-    nickname = '???'
 
-cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9998, "name": nickname,
-       "mode": 'INTERNET'}
+# Display a welcome GUI
+
+gui = tk.Tk()
+
+nickname = ''
+
+# Start a GUI which welcomes the user and prompts for a nickname as well as the chat room to join
+class StartGUI:
+
+    def __init__(self):
+
+        pass
+
+    def exit_LAN(self):
+        global mode
+        mode = 'LAN'
+
+        global nickname
+        nickname = self.input.get().strip()
+
+        if nickname is not None and nickname != '':
+            global gui
+            gui.destroy()
+
+        else:
+            self.err_label.config(text="ERROR: Please enter a nickname!")
+
+    def exit_INTERNET(self):
+        global mode
+        mode = 'INTERNET'
+
+        global gui
+        gui.destroy()
+
+        global nickname
+        nickname = self.input.get()
+
+        if nickname is not None and nickname != '':
+
+            gui.destroy()
+
+        else:
+            self.err_label.config(text="ERROR: Please enter a nickname!")
+
+    def run(self):
+        global gui
+
+        # create our gui
+
+        gui.title('PictoChat The Rebirth')
+        gui.minsize(400, 250)
+        gui.maxsize(400, 250)
+
+        # default color
+
+        # buttons
+        # send button
+        button1 = tk.Button(gui, text="Join LAN Chat Room", width=22, height=5, command=self.exit_LAN)
+        button1.place(x=20, y=150)
+
+        button2 = tk.Button(gui, text="Join Internet Chat Room", width=22, height=5, command=self.exit_INTERNET)
+        button2.place(x=220, y=150)
+
+        label1 = tk.Label(gui, text="Welcome to PictoChat: The Rebirth!")
+        label1.config(font=("Arial", 15))
+        label1.place(x=40, y=40)
+
+        label2 = tk.Label(gui, text="Enter a nickname:")
+        label2.config(font=("Arial", 11))
+        label2.place(x=40, y=110)
+
+        self.err_label = tk.Label(gui, text='', foreground='red')
+        self.err_label.place(x=40, y=75)
+
+        self.input = tk.Entry(gui, width=30)
+        self.input.place(x=175, y=110)
+
+        # run our gui
+        gui.mainloop()
+
+# global variable that GUI modifies
+mode = ''
+
+# Welcome the user
+g = StartGUI()
+g.run()
+
+del gui
+
+# User closed out of welcome GUI - don't start anything else
+if mode == '':
+    exit()
+
+if nickname == '':
+    # user somehow exited without picking a nickname
+    nickname = "???"
+
+# else... continue
+
+print("STARTING PEER IN " + mode + " MODE - Nickname: " + nickname)
+
+cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9998, "name": nickname, "mode": mode}
 
 p = Peer(cfg)
 p.setDaemon(True)  # allows use of CTRL+C to exit program
@@ -331,19 +422,19 @@ print("Peer started on port " + str(local_port))
 
 # Peer object/thread created - now instantiate GUI
 
-gui = gui.Canvas_GUI_Wrapper(p)
-gui.setDaemon(True)
+gui1 = Canvas_GUI_Wrapper(p)
+gui1.setDaemon(True)
 
-gui2 = gui2.Image_Display_GUI(p)
+gui2 = Image_Display_GUI(p)
 gui2.setDaemon(True)
 
 # Start peer / GUI threads
 p.start()
 time.sleep(.5)
-gui.start()
+gui1.start()
 time.sleep(.5)
 gui2.start()
 
-# Prevent our main thread from exiting, since all other methods are daemonic
+# Prevent our main thread from exiting
 while True:
     time.sleep(1)
