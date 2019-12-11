@@ -31,15 +31,11 @@ class Canvas_GUI_Wrapper(threading.Thread):
     # sleeps prevent 'twitching' of line when drawing slowly
     def paint(self, e):
         self.updateSize(None)
-
-        brush_width = self.selectedWidth
-
-
-
+        time.sleep(.02)
         x = e.x
         y = e.y
         self.canvas.create_line((self.lastX, self.lastY, x, y), width=self.selectedWidth, fill=self.color[1])
-
+        time.sleep(.02)
         self.lastX = x
         self.lastY = y
 
@@ -53,6 +49,23 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.bgColor = colorchooser.askcolor()
         self.button6.config(bg=self.bgColor[1])
         self.canvas.config(bg=self.bgColor[1])
+
+    def rainbowColor(self, rainbow_index):
+        if self.rainbowOn:
+            self.color[1] = self.rainbow[rainbow_index]
+            self.button4.config(bg=self.color[1])
+            if rainbow_index == 0:
+                self.root.after(self.rainbow_delay, self.rainbowColor, 29)
+            else:
+                self.root.after(self.rainbow_delay, self.rainbowColor, rainbow_index - 1)
+
+
+    def startStopRainbow(self):
+        if self.rainbowOn:
+            self.rainbowOn = False
+        else:
+            self.rainbowOn = True
+            self.rainbowColor(29)
 
     def flashColor(self, object, color_index):
         object.config(background=self.bg_flash_colors[color_index])
@@ -86,9 +99,14 @@ class Canvas_GUI_Wrapper(threading.Thread):
     # variables variables in run() to avoid errors inherent to Tkinter and threading
     def run(self):
         # flashing for messages button
+        self.rainbowOn = False
         self.flash_delay = 750
+        self.rainbow_delay = 150
         self.bg_flash_colors = ("white", "red")
         self.fg_flash_colors = ("black", "white")
+
+        #30 values for rainbow brush
+        self.rainbow = ['#FF0000', '#FF0032','#FF0064','#FF0096','#FF00C8','#FF00FF','#C800FF','#9600FF','#6400FF','#3200FF','#0000FF','#0032FF','#0064FF','#0096FF','#00C8FF','#00FFFF','#00FFC8','#00FF96','#00FF64','#00FF32','#00FF00','#32FF00','#64FF00','#96FF00','#C8FF00','#FFFF00','#FFC800','#FF9600','#FF6400','#FF3200']
 
         self.root = tk.Tk()
         self.root.withdraw()
@@ -100,7 +118,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.gui.maxsize(1200, 610)
 
         # default color
-        self.color = [' ', 'pink']
+        self.color = [' ', 'red']
         self.bgColor = [' ', 'white']
 
         # populate our gui
@@ -127,7 +145,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # self.label1.place(x=1040, y=170)
         # label for brush size
         self.label2 = Label(self.gui, text="Brush Size")
-        self.label2.place(x=1050, y=100)
+        self.label2.place(x=1050, y=60)
 
         self.button6 = tk.Button(self.gui, text="Background Color", width=28, height=3, command=self.newBGColor,
                                  bg=self.bgColor[1])
@@ -139,11 +157,14 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # slider for size
         self.w1 = Scale(self.gui, from_=1, to_=50, length=200, orient=HORIZONTAL, command=self.updateSize)
         self.w1.set(5)
-        self.w1.place(x=980, y=115)
+        self.w1.place(x=980, y=75)
         # clear button
         self.button5 = tk.Button(self.gui, text="Clear Drawing", width=28, height=3, command=self.clearCanvas)
         self.button5.place(x=980, y=350)
 
+        #button for rainbow brush
+        self.buttonRainbow = tk.Button(self.gui, text="Rainbow Pen", width=28, height=3, command=self.startStopRainbow)
+        self.buttonRainbow.place(x=980, y=125)
         # if we have messages run this line
         # self.flashColor(self.button3, 0)
 
