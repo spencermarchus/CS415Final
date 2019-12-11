@@ -1,1 +1,0 @@
-pyinstaller -y -F  "C:/Users/Spencer/Documents/CS415Final/server.py"
