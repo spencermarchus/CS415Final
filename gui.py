@@ -24,19 +24,26 @@ class Canvas_GUI_Wrapper(threading.Thread):
     # method to start painting
     def startPaint(self, e):
         self.canvas.bind('<B1-Motion>', self.paint)
-        self.lastX = e.x
-        self.lastY = e.y
+        self.lastX = [e.x]
+        self.lastY = [e.y]
 
     # method to perform painting
     # sleeps prevent 'twitching' of line when drawing slowly
     def paint(self, e):
         self.updateSize(None)
+
         x = e.x
         y = e.y
-        self.canvas.create_line((self.lastX, self.lastY, x, y), width=self.selectedWidth, fill=self.color[1])
-        time.sleep(.02)
-        self.lastX = x
-        self.lastY = y
+
+        self.lastX.append(x)
+        self.lastY.append(y)
+
+        if len(self.lastX) == 3:
+
+            self.canvas.create_line((self.lastX[0], self.lastY[0]), (self.lastX[1], self.lastY[1]), (self.lastX[2], self.lastY[2]), width=self.selectedWidth, smooth=True, fill=self.color[1])
+
+            self.lastX = [x]
+            self.lastY = [y]
 
     # method to select color
     def newColor(self):
@@ -98,7 +105,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # flashing for messages button
         self.rainbowOn = False
         self.flash_delay = 750
-        self.rainbow_delay = 150
+        self.rainbow_delay = 100
         self.bg_flash_colors = ("white", "red")
         self.fg_flash_colors = ("black", "white")
 
