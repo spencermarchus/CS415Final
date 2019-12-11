@@ -31,11 +31,15 @@ class Canvas_GUI_Wrapper(threading.Thread):
     # sleeps prevent 'twitching' of line when drawing slowly
     def paint(self, e):
         self.updateSize(None)
-        time.sleep(.02)
+
+        brush_width = self.selectedWidth
+
+
+
         x = e.x
         y = e.y
         self.canvas.create_line((self.lastX, self.lastY, x, y), width=self.selectedWidth, fill=self.color[1])
-        time.sleep(.02)
+
         self.lastX = x
         self.lastY = y
 
