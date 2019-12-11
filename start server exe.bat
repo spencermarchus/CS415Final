@@ -1,0 +1,3 @@
+cd dist
+server
+pause

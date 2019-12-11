@@ -8,9 +8,10 @@ import _pickle as pickle
 from gui import *
 from gui2 import *
 import tkinter as tk
-from tkinter import *
+from mttkinter import *
 import datetime
 
+# host to listen for connections on
 host = ''
 
 
@@ -176,6 +177,8 @@ class Peer(threading.Thread):
         # delete image at specific index
         del (self.images_received[ind])
 
+    # String sending messages are not currently used (DEAD CODE)
+    # these were used for primitive testing
     def broadcast_string(self, message):
         # get updated client dict
         self.get_active_peers()
@@ -240,6 +243,7 @@ class Peer(threading.Thread):
 
         # while True:
         try:
+
             self.server_comms_lock.acquire()
             start = time.time()
 
@@ -253,6 +257,7 @@ class Peer(threading.Thread):
             data = pickle.dumps(msg)
 
             s.sendall(data)
+
 
             data = b''
 
@@ -281,6 +286,7 @@ class Peer(threading.Thread):
         self.server_comms_lock.release()
         time.sleep(3)
 
+
     def leave_server(self):
         # tell server we're leaving
         msg = {'type': 'QUIT', 'port': self.port}
@@ -306,14 +312,23 @@ class Peer(threading.Thread):
 
         # wait for response
 
-        ret_val = s.recv(4096)
+        data = b''
 
-        return_data = pickle.loads(ret_val)
+        while True:
+            part = s.recv(256)
+            data += part
+
+            if len(part) < 256:
+                data += part
+                break
+
+        data_loaded = pickle.loads(data)
+
 
         print("RECEIVED CLIENT DICT FROM SERVER. . .")
-        print(return_data)
+        print(data_loaded)
         self.server_comms_lock.release()
-        return return_data
+        return data_loaded
 
     def check_exit_flag(self):
         if self.EXIT_FLAG:
@@ -329,18 +344,19 @@ except Exception:
     local_port = 4444
 
 # Display a welcome GUI
-
 gui = tk.Tk()
-
 nickname = ''
 
 # Start a GUI which welcomes the user and prompts for a nickname as well as the chat room to join
 class StartGUI:
 
     def __init__(self):
+
         self.input = tk.Entry(gui, width=30)
+
         pass
 
+    # user selected LAN chat room
     def exit_LAN(self):
         global mode
         mode = 'LAN'
@@ -349,22 +365,25 @@ class StartGUI:
         nickname = self.input.get()
 
         if nickname is not None and nickname != '':
+            # exit and launch peer
             global gui
             gui.destroy()
 
         else:
             self.err_label.config(text="ERROR: Please enter a nickname!")
 
+    # user selected internet chat room
     def exit_INTERNET(self):
         global mode
         mode = 'INTERNET'
-
-
 
         global nickname
         nickname = self.input.get()
 
         if nickname is not None and nickname != '':
+
+            # exit and launch peer
+
             global gui
             gui.destroy()
 
@@ -380,10 +399,8 @@ class StartGUI:
         gui.minsize(400, 250)
         gui.maxsize(400, 250)
 
-        # default color
+        # buttons, labels, and fun stuff
 
-        # buttons
-        # send button
         button1 = tk.Button(gui, text="Join LAN Chat Room", width=22, height=5, command=self.exit_LAN)
         button1.place(x=20, y=150)
 
@@ -404,16 +421,20 @@ class StartGUI:
         self.input = tk.Entry(gui, width=30)
         self.input.place(x=175, y=110)
 
+
+
         # run our gui
         gui.mainloop()
+
 
 # global variable that GUI modifies
 mode = ''
 
-# Welcome the user
+# Welcome the user with a GUI
 g = StartGUI()
 g.run()
 
+# wipe everything so Tkinter is happy
 del gui
 
 # User closed out of welcome GUI - don't start anything else
@@ -446,10 +467,10 @@ gui2.setDaemon(True)
 # Start peer / GUI threads
 p.start()
 time.sleep(.5)
-gui1.start()
-time.sleep(.5)
 gui2.start()
+time.sleep(.5)
+gui1.start()
 
 # Prevent our main thread from exiting
 while True:
-    time.sleep(1)
+    time.sleep(10)

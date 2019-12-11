@@ -131,7 +131,10 @@ class Server(threading.Thread):
                 ip = user.ip
                 port = user.port
                 name = user.nickname
+                m = user.mode
                 local_ip = user.local_ip
+
+
                 # Don't give LAN users a directory of internet users, and vice versa
                 if user.mode == mode:
                     return_list.append({'ip': ip, 'local_ip': local_ip, 'port': port, 'name': name})
@@ -145,8 +148,10 @@ class Server(threading.Thread):
 
             self.client_dict_lock.release()
 
+
     # handle an incoming connection
     def server_thread(self, clientSocket):
+
         print('\nHandling client connection. . .')
 
         # get the request from browser
@@ -162,14 +167,12 @@ class Server(threading.Thread):
 
         info = pickle.loads(data)
 
-        # str_data = data.decode()
 
         # the connected client's IP addr
         h, p = clientSocket.getpeername()
 
+        # print the contents of the incoming message
         print('\nMessage from client: ')
-        print(info)
-
         req_type = info['type']
 
         # print the request type for debugging purposes
@@ -183,7 +186,7 @@ class Server(threading.Thread):
 
             print(inf)
 
-        mode = info['mode']
+
 
         if req_type == 'KEEP_ALIVE':
             # update the time which we have last seen this client
@@ -192,6 +195,9 @@ class Server(threading.Thread):
 
         if req_type == 'REQUEST_PEER_DICT':
             # respond with directory of all active clients
+
+            mode = info['mode']
+
             self.send_list_of_all_peers_to_peer(clientSocket, mode)
 
         if req_type == 'QUIT':
@@ -289,8 +295,10 @@ class Server(threading.Thread):
 
                     if self.mailboxes.get(key) is not None:
                         del self.mailboxes[key]
+
                     elif self.clients[key].mode != "LAN":
                         print("Tried to remove " + key + " from " + str(self.mailboxes))
+
 
                 self.client_dict_lock.release()
 
