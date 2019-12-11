@@ -257,10 +257,10 @@ class Peer(threading.Thread):
             data = b''
 
             while True:
-                part = s.recv(128)
+                part = s.recv(1024)
                 data += part
 
-                if len(part) < 128:
+                if len(part) < 1024:
                     data += part
                     break
 
@@ -304,14 +304,23 @@ class Peer(threading.Thread):
 
         # wait for response
 
-        ret_val = s.recv(4096)
+        data = b''
 
-        return_data = pickle.loads(ret_val)
+        while True:
+            part = s.recv(256)
+            data += part
+
+            if len(part) < 256:
+                data += part
+                break
+
+        data_loaded = pickle.loads(data)
+
 
         print("RECEIVED CLIENT DICT FROM SERVER. . .")
-        print(return_data)
+        print(data_loaded)
         self.server_comms_lock.release()
-        return return_data
+        return data_loaded
 
     def check_exit_flag(self):
         if self.EXIT_FLAG:
