@@ -387,7 +387,7 @@ class StartGUI:
         gui.minsize(400, 250)
         gui.maxsize(400, 250)
 
-        # buttons
+        # buttons, labels, and fun stuff
 
         button1 = tk.Button(gui, text="Join LAN Chat Room", width=22, height=5, command=self.exit_LAN)
         button1.place(x=20, y=150)
