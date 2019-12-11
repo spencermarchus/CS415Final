@@ -166,7 +166,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # self.label1 = Label(self.gui, text="Current Color")
         # self.label1.place(x=1040, y=170)
         # label for brush size
-s
+
         self.label2 = ttk.Label(self.gui, text="Brush Size" )
         self.label2.place(x=1050, y=100)
 
