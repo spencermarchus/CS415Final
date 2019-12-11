@@ -59,7 +59,7 @@ class Peer(threading.Thread):
                 (clientSocket, client_address) = self.serverSocket.accept()
 
                 d = threading.Thread(name='client',
-                                     target=self.peer_thread, args=(clientSocket))
+                                     target=self.peer_thread, args=(clientSocket,))
                 d.setDaemon(True)  # can run in background, will not prevent program from closing
                 d.start()
             except Exception as e:
@@ -338,7 +338,7 @@ nickname = ''
 class StartGUI:
 
     def __init__(self):
-
+        self.input = tk.Entry(gui, width=30)
         pass
 
     def exit_LAN(self):
@@ -346,7 +346,7 @@ class StartGUI:
         mode = 'LAN'
 
         global nickname
-        nickname = self.input.get().strip()
+        nickname = self.input.get()
 
         if nickname is not None and nickname != '':
             global gui
@@ -359,14 +359,13 @@ class StartGUI:
         global mode
         mode = 'INTERNET'
 
-        global gui
-        gui.destroy()
+
 
         global nickname
         nickname = self.input.get()
 
         if nickname is not None and nickname != '':
-
+            global gui
             gui.destroy()
 
         else:
