@@ -19,12 +19,13 @@ port = 9998
 
 class User:
 
-    def __init__(self, ip, local_ip, port_no, name):
+    def __init__(self, ip, local_ip, port_no, name, mode):
         self.nickname = name
         self.ip = ip
         self.port = port_no
         self.local_ip = local_ip  # represents a remote peer's IP on its local network
         self.timestamp = datetime.datetime.now()  # current date and time
+        self.mode = mode
 
 
 class Server(threading.Thread):
@@ -57,7 +58,7 @@ class Server(threading.Thread):
         # start a thread which periodically checks the list of peers to ensure they are active
         threading.Thread(target=self.prune_dict_thread).start()
 
-        print('Server started!')
+        print('Server started on port '+port)
 
         while True:
 
@@ -87,6 +88,7 @@ class Server(threading.Thread):
             port_no = client_info['PORT_NO']
             nickname = client_info['nickname']
             local_ip = client_info['local_ip']
+            mode = client_info['mode']
 
             # create a mailbox for this user
 
@@ -107,7 +109,7 @@ class Server(threading.Thread):
             self.client_dict_lock.acquire()
 
             # client dict will be indexed by "IP:port_no" - replace with a new Peer object with current timestamp
-            self.clients[index] = User(ip_addr, local_ip, port_no, nickname)
+            self.clients[index] = User(ip_addr, local_ip, port_no, nickname, mode)
 
             print('\nPeer updated successfully!')
             print(self.clients)
@@ -117,7 +119,7 @@ class Server(threading.Thread):
             self.client_dict_lock.release()
 
     # when a peer requests a list of all curently connected peers, call this method
-    def send_list_of_all_peers_to_peer(self, peer_socket):
+    def send_list_of_all_peers_to_peer(self, peer_socket, mode):
 
         self.client_dict_lock.acquire()
 
@@ -130,7 +132,10 @@ class Server(threading.Thread):
                 port = user.port
                 name = user.nickname
                 local_ip = user.local_ip
-                return_list.append({'ip': ip, 'local_ip': local_ip, 'port': port, 'name': name})
+                # Don't give LAN users a directory of internet users, and vice versa
+                if user.mode == mode:
+                    return_list.append({'ip': ip, 'local_ip': local_ip, 'port': port, 'name': name})
+
 
             # send dict to peer's socket
             response = pickle.dumps(return_list)
@@ -140,7 +145,8 @@ class Server(threading.Thread):
 
             self.client_dict_lock.release()
 
-    def server_thread(self, clientSocket, client_addr):
+    # handle an incoming connection
+    def server_thread(self, clientSocket):
         print('\nHandling client connection. . .')
 
         # get the request from browser
@@ -166,6 +172,19 @@ class Server(threading.Thread):
 
         req_type = info['type']
 
+        # print the request type for debugging purposes
+        if req_type not in ['IMAGE', 'INTERNET_MSG']:
+            print(info)
+        else:
+            inf = {}
+            for key in info:
+                if key not in ['IMAGE', 'INTERNET_MSG']:
+                    inf[key] = info[key]
+
+            print(inf)
+
+        mode = info['mode']
+
         if req_type == 'KEEP_ALIVE':
             # update the time which we have last seen this client
             client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip']}
@@ -173,7 +192,7 @@ class Server(threading.Thread):
 
         if req_type == 'REQUEST_PEER_DICT':
             # respond with directory of all active clients
-            self.send_list_of_all_peers_to_peer(clientSocket)
+            self.send_list_of_all_peers_to_peer(clientSocket, mode)
 
         if req_type == 'QUIT':
 
@@ -267,6 +286,11 @@ class Server(threading.Thread):
                 # delete clients that need to get deleted
                 for key in indices_to_remove:
                     del self.clients[key]
+
+                    if self.mailboxes.get(key) is not None:
+                        del self.mailboxes[key]
+                    elif self.clients[key].mode != "LAN":
+                        print("Tried to remove " + key + " from " + str(self.mailboxes))
 
                 self.client_dict_lock.release()
 

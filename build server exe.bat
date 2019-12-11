@@ -1,1 +1,3 @@
-pyinstaller -y -F  "C:/Users/Spencer/Documents/CS415Final/server.py"
+pyinstaller -y -F  "%cd%\server.py"
+rd /s /q build
+pause

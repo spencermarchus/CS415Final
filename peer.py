@@ -59,17 +59,25 @@ class Peer(threading.Thread):
                 (clientSocket, client_address) = self.serverSocket.accept()
 
                 d = threading.Thread(name='client',
-                                     target=self.peer_thread, args=(clientSocket, client_address))
+                                     target=self.peer_thread, args=(clientSocket))
                 d.setDaemon(True)  # can run in background, will not prevent program from closing
                 d.start()
             except Exception as e:
                 print(e)
 
-    def peer_thread(self, client_sock, client_addr):
+    def peer_thread(self, client_sock):
         # handle receiving an image
         print('Handling message. . .')
 
-        data = client_sock.recv(512000)
+        data = b''
+
+        while True:
+            part = client_sock.recv(256)
+            data += part
+
+            if len(part) < 256:
+                data += part
+                break
 
         data_loaded = pickle.loads(data)
 
@@ -209,7 +217,7 @@ class Peer(threading.Thread):
 
                 s.connect((self.server_ip, self.server_port))
 
-                msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4}
+                msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4, 'mode':self.mode}
 
                 # pickle the dict and send it to server
                 s.sendall(pickle.dumps(msg))
@@ -231,35 +239,43 @@ class Peer(threading.Thread):
     def check_for_messages_over_network(self):
 
         # while True:
-        # try:
-        self.server_comms_lock.acquire()
-        start = time.time()
+        try:
+            self.server_comms_lock.acquire()
+            start = time.time()
 
-        # connect to server and check if we have any messages waiting
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # connect to server and check if we have any messages waiting
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        s.connect((self.server_ip, self.server_port))
+            s.connect((self.server_ip, self.server_port))
 
-        msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
+            msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
 
-        data = pickle.dumps(msg)
+            data = pickle.dumps(msg)
 
-        s.sendall(data)
+            s.sendall(data)
 
-        ret_val = s.recv(5000000)
+            data = b''
 
-        return_data = pickle.loads(ret_val)['data']
+            while True:
+                part = s.recv(256)
+                data += part
 
-        for tup in return_data:
-            sender = tup[0]
-            png = tup[1]
+                if len(part) < 256:
+                    data += part
+                    break
 
-            self.handle_image(png, sender)
+            return_data = pickle.loads(data)['data']
 
-        # except Exception as e:
-        #     print(e, " REE")
-        #     pass
-        #
+            for tup in return_data:
+                sender = tup[0]
+                png = tup[1]
+
+                self.handle_image(png, sender)
+
+        except Exception as e:
+            print(e, " REE")
+            pass
+
         # finally:
         end = time.time()
         self.server_comms_lock.release()
@@ -282,7 +298,7 @@ class Peer(threading.Thread):
         s.connect((self.server_ip, self.server_port))
         print('Connected to server, requesting list of peers')
 
-        request_dict = {'type': 'REQUEST_PEER_DICT'}
+        request_dict = {'type': 'REQUEST_PEER_DICT', 'mode': self.mode}
 
         data = pickle.dumps(request_dict)
 

@@ -1,2 +1,3 @@
 pyinstaller -y -F  "%cd%\peer.py"
-pause
+rd /s /q build
+pause 
