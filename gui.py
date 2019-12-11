@@ -159,7 +159,8 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
     def save_as_png(self, fileName):
         # save postscipt image
-        
+        bgFill = self.canvas.create_rectangle(2, 2, 960, 590, fill = self.bgColor[1])
+        self.canvas.tag_lower(bgFill)
         self.canvas.postscript(file=fileName + '.eps')
         # use PIL to convert to PNG
         img = Image.open(fileName + '.eps')
