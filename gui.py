@@ -31,7 +31,6 @@ class Canvas_GUI_Wrapper(threading.Thread):
     # sleeps prevent 'twitching' of line when drawing slowly
     def paint(self, e):
         self.updateSize(None)
-        time.sleep(.02)
         x = e.x
         y = e.y
         self.canvas.create_line((self.lastX, self.lastY, x, y), width=self.selectedWidth, fill=self.color[1])
@@ -59,7 +58,6 @@ class Canvas_GUI_Wrapper(threading.Thread):
             else:
                 self.root.after(self.rainbow_delay, self.rainbowColor, rainbow_index - 1)
 
-
     def startStopRainbow(self):
         if self.rainbowOn:
             self.rainbowOn = False
@@ -77,10 +75,9 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # leave the chatroom by letting server know you are exiting
         self.peer.EXIT_FLAG = True
         try:
-            self.peer.leave_server() # synchronous call to ensure that server knows
+            self.peer.leave_server()  # synchronous call to ensure that server knows
         finally:
             os._exit(0)
-
 
     # this method is honestly disgusting but it needs to be this way
     def __init__(self, peer):
@@ -105,8 +102,11 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.bg_flash_colors = ("white", "red")
         self.fg_flash_colors = ("black", "white")
 
-        #30 values for rainbow brush
-        self.rainbow = ['#FF0000', '#FF0032','#FF0064','#FF0096','#FF00C8','#FF00FF','#C800FF','#9600FF','#6400FF','#3200FF','#0000FF','#0032FF','#0064FF','#0096FF','#00C8FF','#00FFFF','#00FFC8','#00FF96','#00FF64','#00FF32','#00FF00','#32FF00','#64FF00','#96FF00','#C8FF00','#FFFF00','#FFC800','#FF9600','#FF6400','#FF3200']
+        # 30 values for rainbow brush
+        self.rainbow = ['#FF0000', '#FF0032', '#FF0064', '#FF0096', '#FF00C8', '#FF00FF', '#C800FF', '#9600FF',
+                        '#6400FF', '#3200FF', '#0000FF', '#0032FF', '#0064FF', '#0096FF', '#00C8FF', '#00FFFF',
+                        '#00FFC8', '#00FF96', '#00FF64', '#00FF32', '#00FF00', '#32FF00', '#64FF00', '#96FF00',
+                        '#C8FF00', '#FFFF00', '#FFC800', '#FF9600', '#FF6400', '#FF3200']
 
         self.root = tk.Tk()
         self.root.withdraw()
@@ -138,7 +138,8 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
         # self.button3.place(x=980, y=13)
         # select color button
-        self.button4 = tk.Button(self.gui, text="Brush Color", width=28, height=3, command=self.newColor, bg=self.color[1])
+        self.button4 = tk.Button(self.gui, text="Brush Color", width=28, height=3, command=self.newColor,
+                                 bg=self.color[1])
         self.button4.place(x=980, y=190)
         # selected color display label
         # self.label1 = Label(self.gui, text="Current Color")
@@ -162,7 +163,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.button5 = tk.Button(self.gui, text="Clear Drawing", width=28, height=3, command=self.clearCanvas)
         self.button5.place(x=980, y=350)
 
-        #button for rainbow brush
+        # button for rainbow brush
         self.buttonRainbow = tk.Button(self.gui, text="Rainbow Pen", width=28, height=3, command=self.startStopRainbow)
         self.buttonRainbow.place(x=980, y=125)
         # if we have messages run this line
@@ -184,7 +185,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
     def save_as_png(self, fileName):
         # save postscipt image
-        bgFill = self.canvas.create_rectangle(2, 2, 960, 590, fill = self.bgColor[1])
+        bgFill = self.canvas.create_rectangle(2, 2, 960, 590, fill=self.bgColor[1])
         self.canvas.tag_lower(bgFill)
         self.canvas.postscript(file=fileName + '.eps')
         # use PIL to convert to PNG
@@ -192,6 +193,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
         img.save(fileName + '.png', 'png')
 
         # save the canvas
+
     def broadcast_canvas_thread(self):
         self.save_as_png("outgoing")
         img_pointer = open('outgoing.png', mode='rb')

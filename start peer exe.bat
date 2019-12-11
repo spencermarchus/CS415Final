@@ -1,2 +1,3 @@
-peer 4444 Spencer1
+cd dist
+peer 4444 
 pause
