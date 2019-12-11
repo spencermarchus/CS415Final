@@ -8,9 +8,10 @@ import _pickle as pickle
 from gui import *
 from gui2 import *
 import tkinter as tk
-from tkinter import *
+from mttkinter import *
 import datetime
 
+# host to listen for connections on
 host = ''
 
 
