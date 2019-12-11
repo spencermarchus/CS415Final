@@ -13,6 +13,7 @@ from PIL import ImageGrab, Image
 import threading
 
 
+
 class Canvas_GUI_Wrapper(threading.Thread):
 
     # methods
@@ -97,8 +98,8 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # create our gui
         self.gui = tk.Tk()
         self.gui.title('PictoChat The Rebirth')
-        self.gui.minsize(1200, 700)
-        self.gui.maxsize(1200, 700)
+        self.gui.minsize(1200, 610)
+        self.gui.maxsize(1200, 610)
         tabs = ttk.Notebook(self.gui)
         tabs.pack(expand=1, fill="both")
 
