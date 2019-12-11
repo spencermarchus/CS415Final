@@ -343,7 +343,7 @@ nickname = ''
 class StartGUI:
 
     def __init__(self):
-
+        self.input = ''
         pass
 
     # user selected LAN chat room
@@ -352,7 +352,7 @@ class StartGUI:
         mode = 'LAN'
 
         global nickname
-        nickname = self.input.get().strip()
+        nickname = self.input.get()
 
         if nickname is not None and nickname != '':
             # exit and launch peer
@@ -366,15 +366,13 @@ class StartGUI:
     def exit_INTERNET(self):
         global mode
         mode = 'INTERNET'
-
-        global gui
-        gui.destroy()
-
+        
         global nickname
         nickname = self.input.get()
 
         if nickname is not None and nickname != '':
             # exit and launch peer
+            global gui
             gui.destroy()
 
         else:
@@ -410,6 +408,8 @@ class StartGUI:
 
         self.input = tk.Entry(gui, width=30)
         self.input.place(x=175, y=110)
+
+
 
         # run our gui
         gui.mainloop()
