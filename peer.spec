@@ -3,8 +3,8 @@
 block_cipher = None
 
 
-a = Analysis(['C:/Users/Spencer/Documents/CS415Final/peer.py'],
-             pathex=['C:\\Users\\Spencer\\Documents\\CS415Final'],
+a = Analysis(['C:\\Users\\spmar\\Documents\\CS415Final\\peer.py'],
+             pathex=['C:\\Users\\spmar\\Documents\\CS415Final'],
              binaries=[],
              datas=[],
              hiddenimports=[],

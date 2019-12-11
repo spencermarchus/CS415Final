@@ -1,1 +1,2 @@
-pyinstaller -y -F  "C:/Users/Spencer/Documents/CS415Final/peer.py"
+pyinstaller -y -F  "%cd%\peer.py"
+pause
