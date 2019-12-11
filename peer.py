@@ -8,7 +8,7 @@ import _pickle as pickle
 from gui import *
 from gui2 import *
 import tkinter as tk
-from mttkinter import *
+from tkinter import *
 import datetime
 from ttkthemes import ThemedStyle
 from tkinter import ttk
@@ -61,23 +61,23 @@ class Peer(threading.Thread):
                 (clientSocket, client_address) = self.serverSocket.accept()
 
                 d = threading.Thread(name='client',
-                                     target=self.peer_thread, args=(clientSocket,))
+                                     target=self.peer_thread, args=(clientSocket, client_address))
                 d.setDaemon(True)  # can run in background, will not prevent program from closing
                 d.start()
             except Exception as e:
                 print(e)
 
-    def peer_thread(self, client_sock):
+    def peer_thread(self, client_sock, client_addr):
         # handle receiving an image
         print('Handling message. . .')
 
         data = b''
 
         while True:
-            part = client_sock.recv(256)
+            part = client_sock.recv(128)
             data += part
 
-            if len(part) < 256:
+            if len(part) < 128:
                 data += part
                 break
 
@@ -94,8 +94,6 @@ class Peer(threading.Thread):
         else:
             print("UNKNOWN MESSAGE TYPE RECEIVED: " + data_loaded)
 
-        # if data_loaded['type'] == "MESSAGE":
-        #     print("Message Recieved: " + data_loaded['data'] + " From: " + data_loaded['sender'])
 
     # send an image to all known peers
     def broadcast_image(self, img_pointer, sender_name):
@@ -178,8 +176,6 @@ class Peer(threading.Thread):
         # delete image at specific index
         del (self.images_received[ind])
 
-    # String sending messages are not currently used (DEAD CODE)
-    # these were used for primitive testing
     def broadcast_string(self, message):
         # get updated client dict
         self.get_active_peers()
@@ -221,7 +217,7 @@ class Peer(threading.Thread):
 
                 s.connect((self.server_ip, self.server_port))
 
-                msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4, 'mode':self.mode}
+                msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4}
 
                 # pickle the dict and send it to server
                 s.sendall(pickle.dumps(msg))
@@ -243,43 +239,47 @@ class Peer(threading.Thread):
     def check_for_messages_over_network(self):
 
         # while True:
-        try:
+        # try:
+        self.server_comms_lock.acquire()
+        start = time.time()
 
-            # connect to server and check if we have any messages waiting
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # connect to server and check if we have any messages waiting
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            s.connect((self.server_ip, self.server_port))
+        s.connect((self.server_ip, self.server_port))
 
-            msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
+        msg = {'type': 'MSG_CHECK', 'port': self.port, 'local_ip': self.local_ipv4}
 
-            data = pickle.dumps(msg)
+        data = pickle.dumps(msg)
 
-            s.sendall(data)
+        s.sendall(data)
 
-            data = b''
+        data = b''
 
-            while True:
-                part = s.recv(1024)
+        while True:
+            part = s.recv(128)
+            data += part
+
+            if len(part) < 128:
                 data += part
+                break
 
-                if len(part) < 1024:
-                    data += part
-                    break
+        return_data = pickle.loads(part)['data']
 
-            return_data = pickle.loads(data)['data']
+        for tup in return_data:
+            sender = tup[0]
+            png = tup[1]
 
-            for tup in return_data:
-                sender = tup[0]
-                png = tup[1]
+            self.handle_image(png, sender)
 
-                self.handle_image(png, sender)
-
-        except Exception as e:
-            print(e, " REE")
-            pass
-
-        finally:
-            time.sleep(2)
+        # except Exception as e:
+        #     print(e, " REE")
+        #     pass
+        #
+        # finally:
+        end = time.time()
+        self.server_comms_lock.release()
+        time.sleep(3)
 
     def leave_server(self):
         # tell server we're leaving
@@ -298,10 +298,11 @@ class Peer(threading.Thread):
         s.connect((self.server_ip, self.server_port))
         print('Connected to server, requesting list of peers')
 
-        request_dict = {'type': 'REQUEST_PEER_DICT', 'mode': self.mode}
+        request_dict = {'type': 'REQUEST_PEER_DICT'}
 
         data = pickle.dumps(request_dict)
 
+        # send all data thru socket
         s.sendall(data)
 
         # wait for response
@@ -309,20 +310,19 @@ class Peer(threading.Thread):
         data = b''
 
         while True:
-            part = s.recv(256)
+            part = s.recv(128)
             data += part
 
-            if len(part) < 256:
+            if len(part) < 128:
                 data += part
                 break
 
-        data_loaded = pickle.loads(data)
-
+        return_data = pickle.loads(data)
 
         print("RECEIVED CLIENT DICT FROM SERVER. . .")
-        print(data_loaded)
+        print(return_data)
         self.server_comms_lock.release()
-        return data_loaded
+        return return_data
 
     def check_exit_flag(self):
         if self.EXIT_FLAG:
@@ -338,43 +338,44 @@ except Exception:
     local_port = 4444
 
 # Display a welcome GUI
+
 gui = tk.Tk()
+
 nickname = ''
 
 # Start a GUI which welcomes the user and prompts for a nickname as well as the chat room to join
 class StartGUI:
 
     def __init__(self):
-        self.input = ''
+
         pass
 
-    # user selected LAN chat room
     def exit_LAN(self):
         global mode
         mode = 'LAN'
 
         global nickname
-        nickname = self.input.get()
+        nickname = self.input.get().strip()
 
         if nickname is not None and nickname != '':
-            # exit and launch peer
             global gui
             gui.destroy()
 
         else:
             self.err_label.config(text="ERROR: Please enter a nickname!")
 
-    # user selected internet chat room
     def exit_INTERNET(self):
         global mode
         mode = 'INTERNET'
+
+        global gui
+        gui.destroy()
 
         global nickname
         nickname = self.input.get()
 
         if nickname is not None and nickname != '':
-            # exit and launch peer
-            global gui
+
             gui.destroy()
 
         else:
@@ -398,6 +399,7 @@ class StartGUI:
         button1 = ttk.Button(gui, text="Join LAN Chat Room",  command=self.exit_LAN)
         button1.place(x=60, y=155)
 
+
         button2 = ttk.Button(gui, text="Join Internet Chat Room",  command=self.exit_INTERNET)
         button2.place(x=200, y=155)
 
@@ -415,20 +417,16 @@ class StartGUI:
         self.input = ttk.Entry(gui, width=30)
         self.input.place(x=175, y=110)
 
-
-
         # run our gui
         gui.mainloop()
-
 
 # global variable that GUI modifies
 mode = ''
 
-# Welcome the user with a GUI
+# Welcome the user
 g = StartGUI()
 g.run()
 
-# wipe everything so Tkinter is happy
 del gui
 
 # User closed out of welcome GUI - don't start anything else
@@ -467,4 +465,4 @@ gui2.start()
 
 # Prevent our main thread from exiting
 while True:
-    time.sleep(10)
+    time.sleep(1)
