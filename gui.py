@@ -58,7 +58,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
 
     def rainbowColor(self, rainbow_index):
         if self.rainbowOn:
-            self.color[1] = self.rainbow[rainbow_index]
+            self.color = ('', self.rainbow[rainbow_index])
             self.button4.config(bg=self.color[1])
             if rainbow_index == 0:
                 self.root.after(self.rainbow_delay, self.rainbowColor, 29)

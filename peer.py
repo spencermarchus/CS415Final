@@ -8,7 +8,7 @@ import _pickle as pickle
 from gui import *
 from gui2 import *
 import tkinter as tk
-from mttkinter import *
+from tkinter import *
 import datetime
 
 # host to listen for connections on
@@ -70,7 +70,15 @@ class Peer(threading.Thread):
         # handle receiving an image
         print('Handling message. . .')
 
-        data = client_sock.recv(512000)
+        data = b''
+
+        while True:
+            part = client_sock.recv(128)
+            data += part
+
+            if len(part) < 128:
+                data += part
+                break
 
         data_loaded = pickle.loads(data)
 
@@ -85,8 +93,6 @@ class Peer(threading.Thread):
         else:
             print("UNKNOWN MESSAGE TYPE RECEIVED: " + data_loaded)
 
-        # if data_loaded['type'] == "MESSAGE":
-        #     print("Message Recieved: " + data_loaded['data'] + " From: " + data_loaded['sender'])
 
     # send an image to all known peers
     def broadcast_image(self, img_pointer, sender_name):
@@ -247,9 +253,17 @@ class Peer(threading.Thread):
 
         s.sendall(data)
 
-        ret_val = s.recv(5000000)
+        data = b''
 
-        return_data = pickle.loads(ret_val)['data']
+        while True:
+            part = s.recv(128)
+            data += part
+
+            if len(part) < 128:
+                data += part
+                break
+
+        return_data = pickle.loads(part)['data']
 
         for tup in return_data:
             sender = tup[0]
@@ -287,13 +301,22 @@ class Peer(threading.Thread):
 
         data = pickle.dumps(request_dict)
 
+        # send all data thru socket
         s.sendall(data)
 
         # wait for response
 
-        ret_val = s.recv(4096)
+        data = b''
 
-        return_data = pickle.loads(ret_val)
+        while True:
+            part = s.recv(128)
+            data += part
+
+            if len(part) < 128:
+                data += part
+                break
+
+        return_data = pickle.loads(data)
 
         print("RECEIVED CLIENT DICT FROM SERVER. . .")
         print(return_data)
