@@ -5,6 +5,9 @@ import time
 import tkinter as tk
 import tkinter.colorchooser as colorchooser
 from tkinter import *
+from tkinter import ttk
+from tkinter.ttk import *
+from ttkthemes import ThemedStyle
 import sys
 from PIL import ImageGrab, Image
 import threading
@@ -85,19 +88,19 @@ class Canvas_GUI_Wrapper(threading.Thread):
     # override the run method of Thread... readability of this is horrible, but we have to create all these instance
     # variables variables in run() to avoid errors inherent to Tkinter and threading
     def run(self):
-        # flashing for messages button
-        self.flash_delay = 750
-        self.bg_flash_colors = ("white", "red")
-        self.fg_flash_colors = ("black", "white")
+
 
         self.root = tk.Tk()
         self.root.withdraw()
 
+
         # create our gui
         self.gui = tk.Tk()
         self.gui.title('PictoChat The Rebirth')
-        self.gui.minsize(1200, 610)
-        self.gui.maxsize(1200, 610)
+        self.gui.minsize(1200, 700)
+        self.gui.maxsize(1200, 700)
+        tabs = ttk.Notebook(self.gui)
+        tabs.pack(expand=1, fill="both")
 
         # default color
         self.color = [' ', 'pink']
@@ -106,8 +109,13 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # populate our gui
         # canvas object
         self.canvas = Canvas(self.gui, bg="white", width=960, height=590)
-        self.canvas.place(x=10, y=10)
+        self.canvas.place(x=10, y=35)
+
+
         # buttons
+        style = ThemedStyle(self.gui)
+        style.set_theme("equilux")
+
         # send button
         self.button1 = tk.Button(self.gui, text="Send Message", width=28, height=8, fg="green",
                                  activeforeground="green", command=self.broadcast_canvas)
@@ -126,7 +134,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # self.label1 = Label(self.gui, text="Current Color")
         # self.label1.place(x=1040, y=170)
         # label for brush size
-        self.label2 = Label(self.gui, text="Brush Size")
+        self.label2 = ttk.Label(self.gui, text="Brush Size" )
         self.label2.place(x=1050, y=100)
 
         self.button6 = tk.Button(self.gui, text="Background Color", width=28, height=3, command=self.newBGColor,
@@ -137,13 +145,12 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # self.colorCanvas = Canvas(self.gui, bg=self.color[1], width=203, height=50)
         # self.colorCanvas.place(x=980, y=190)
         # slider for size
-        self.w1 = Scale(self.gui, from_=1, to_=50, length=200, orient=HORIZONTAL, command=self.updateSize)
+        self.w1 = ttk.Scale(self.gui, from_=1, to_=50, length=200, orient=HORIZONTAL, command=self.updateSize)
         self.w1.set(5)
         self.w1.place(x=980, y=115)
         # clear button
-        self.button5 = tk.Button(self.gui, text="Clear Drawing", width=28, height=3, command=self.clearCanvas)
+        self.button5 = ttk.Button(self.gui, text="Clear Drawing", command=self.clearCanvas)
         self.button5.place(x=980, y=350)
-
         # if we have messages run this line
         # self.flashColor(self.button3, 0)
 

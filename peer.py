@@ -10,7 +10,8 @@ from gui2 import *
 import tkinter as tk
 from mttkinter import *
 import datetime
-
+from ttkthemes import ThemedStyle
+from tkinter import ttk
 # host to listen for connections on
 host = ''
 
@@ -383,31 +384,35 @@ class StartGUI:
         global gui
 
         # create our gui
+        tabs = ttk.Notebook(gui)
+        tabs.pack(expand=1, fill="both")
 
         gui.title('PictoChat The Rebirth')
         gui.minsize(400, 250)
         gui.maxsize(400, 250)
 
         # buttons, labels, and fun stuff
+        style = ThemedStyle(gui)
+        style.set_theme("equilux")
 
-        button1 = tk.Button(gui, text="Join LAN Chat Room", width=22, height=5, command=self.exit_LAN)
-        button1.place(x=20, y=150)
+        button1 = ttk.Button(gui, text="Join LAN Chat Room",  command=self.exit_LAN)
+        button1.place(x=60, y=155)
 
-        button2 = tk.Button(gui, text="Join Internet Chat Room", width=22, height=5, command=self.exit_INTERNET)
-        button2.place(x=220, y=150)
+        button2 = ttk.Button(gui, text="Join Internet Chat Room",  command=self.exit_INTERNET)
+        button2.place(x=200, y=155)
 
-        label1 = tk.Label(gui, text="Welcome to PictoChat: The Rebirth!")
+        label1 = ttk.Label(gui, text="Welcome to PictoChat: The Rebirth!")
         label1.config(font=("Arial", 15))
         label1.place(x=40, y=40)
 
-        label2 = tk.Label(gui, text="Enter a nickname:")
+        label2 = ttk.Label(gui, text="Enter a nickname:")
         label2.config(font=("Arial", 11))
         label2.place(x=40, y=110)
 
-        self.err_label = tk.Label(gui, text='', foreground='red')
+        self.err_label = ttk.Label(gui, text='', foreground='red')
         self.err_label.place(x=40, y=75)
 
-        self.input = tk.Entry(gui, width=30)
+        self.input = ttk.Entry(gui, width=30)
         self.input.place(x=175, y=110)
 
 
@@ -456,9 +461,9 @@ gui2.setDaemon(True)
 # Start peer / GUI threads
 p.start()
 time.sleep(.5)
-gui2.start()
-time.sleep(.5)
 gui1.start()
+time.sleep(.5)
+gui2.start()
 
 # Prevent our main thread from exiting
 while True:
