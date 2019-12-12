@@ -74,12 +74,12 @@ class Peer(threading.Thread):
         data = b''
 
         while True:
-            part = client_sock.recv(128)
+            part = client_sock.recv(4096)
+            
             data += part
-
-            if len(part) < 128:
-                data += part
+            if len(part) < 4096:
                 break
+
 
         data_loaded = pickle.loads(data)
 
@@ -257,14 +257,13 @@ class Peer(threading.Thread):
         data = b''
 
         while True:
-            part = s.recv(128)
+            part = s.recv(12800)
             data += part
 
-            if len(part) < 128:
-                data += part
+            if len(part) < 12800:
                 break
 
-        return_data = pickle.loads(part)['data']
+        return_data = pickle.loads(data)['data']
 
         for tup in return_data:
             sender = tup[0]
