@@ -257,10 +257,10 @@ class Peer(threading.Thread):
         data = b''
 
         while True:
-            part = s.recv(12800)
+            part = s.recv(128)
             data += part
 
-            if len(part) < 12800:
+            if len(part) < 128:
                 break
 
         return_data = pickle.loads(data)['data']
