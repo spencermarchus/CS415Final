@@ -78,7 +78,6 @@ class Peer(threading.Thread):
             data += part
 
             if len(part) < 128:
-                data += part
                 break
 
         data_loaded = pickle.loads(data)
@@ -261,10 +260,10 @@ class Peer(threading.Thread):
             data += part
 
             if len(part) < 128:
-                data += part
+                
                 break
 
-        return_data = pickle.loads(part)['data']
+        return_data = pickle.loads(data)['data']
 
         for tup in return_data:
             sender = tup[0]
@@ -355,7 +354,7 @@ class StartGUI:
         mode = 'LAN'
 
         global nickname
-        nickname = self.input.get().strip()
+        nickname = self.input.get()
 
         if nickname is not None and nickname != '':
             global gui
@@ -369,7 +368,6 @@ class StartGUI:
         mode = 'INTERNET'
 
         global gui
-        gui.destroy()
 
         global nickname
         nickname = self.input.get()
