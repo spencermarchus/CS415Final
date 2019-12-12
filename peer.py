@@ -77,12 +77,8 @@ class Peer(threading.Thread):
             part = client_sock.recv(4096)
             
             data += part
-<<<<<<< HEAD
 
             if len(part) < 128:
-=======
-            if len(part) < 4096:
->>>>>>> 270b69496b48eee2ec1967adde81e771b4d88fda
                 break
 
 
@@ -318,7 +314,6 @@ class Peer(threading.Thread):
             data += part
 
             if len(part) < 128:
-                data += part
                 break
 
         return_data = pickle.loads(data)
@@ -373,10 +368,6 @@ class StartGUI:
         mode = 'INTERNET'
 
         global gui
-<<<<<<< HEAD
-=======
-        
->>>>>>> 270b69496b48eee2ec1967adde81e771b4d88fda
 
         global nickname
         nickname = self.input.get()
