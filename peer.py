@@ -369,7 +369,7 @@ class StartGUI:
         mode = 'INTERNET'
 
         global gui
-        gui.destroy()
+        
 
         global nickname
         nickname = self.input.get()
