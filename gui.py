@@ -151,29 +151,29 @@ class Canvas_GUI_Wrapper(threading.Thread):
         self.button1 = tk.Button(self.gui, text="Send Message", width=28, height=8, fg="green",
                                  activeforeground="green", command=self.broadcast_canvas)
 
-        self.button1.place(x=980, y=425)
+        self.button1.place(x=985, y=425)
         # leave button
         self.button2 = tk.Button(self.gui, text="Leave Chat Room", width=28, height=2, fg="red", activeforeground="red",
                                  command=self.leaveChat)
-        self.button2.place(x=980, y=560)
+        self.button2.place(x=985, y=560)
 
         # self.button3.place(x=980, y=13)
         # select color button
         self.button4 = tk.Button(self.gui, text="Brush Color", width=28, height=3, command=self.newColor,
                                  bg=self.color[1])
-        self.button4.place(x=980, y=190)
+        self.button4.place(x=985, y=200)
         # selected color display label
         # self.label1 = Label(self.gui, text="Current Color")
         # self.label1.place(x=1040, y=170)
         # label for brush size
 
         self.label2 = ttk.Label(self.gui, text="Brush Size" )
-        self.label2.place(x=1050, y=100)
+        self.label2.place(x=1050, y=50)
 
 
         self.button6 = tk.Button(self.gui, text="Background Color", width=28, height=3, command=self.newBGColor,
                                  bg=self.bgColor[1])
-        self.button6.place(x=980, y=255)
+        self.button6.place(x=985, y=270)
 
         # selected color display viewable color
         # self.colorCanvas = Canvas(self.gui, bg=self.color[1], width=203, height=50)
@@ -181,15 +181,15 @@ class Canvas_GUI_Wrapper(threading.Thread):
         # slider for size
         self.w1 = ttk.Scale(self.gui, from_=1, to_=50, length=200, orient=HORIZONTAL, command=self.updateSize)
         self.w1.set(5)
-        self.w1.place(x=980, y=75)
+        self.w1.place(x=985, y=75)
         # clear button
-        self.button5 = ttk.Button(self.gui, text="Clear Drawing", command=self.clearCanvas)
-        self.button5.place(x=980, y=350)
+        self.button5 = tk.Button(self.gui, text="Clear Drawing", width=28, height=3, command=self.clearCanvas)
+        self.button5.place(x=985, y=340)
 
 
         # button for rainbow brush
         self.buttonRainbow = tk.Button(self.gui, text="Rainbow Pen", width=28, height=3, command=self.startStopRainbow)
-        self.buttonRainbow.place(x=980, y=125)
+        self.buttonRainbow.place(x=985, y=130)
 
         # if we have messages run this line
         # self.flashColor(self.button3, 0)
