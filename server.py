@@ -13,18 +13,21 @@ import _pickle as pickle
 host = ''
 port = 9998
 
+localhost = '127.0.0.1'
+
 
 # only one thread can modify the dict at one time
 
 
 class User:
 
-    def __init__(self, ip, local_ip, port_no, name):
+    def __init__(self, ip, local_ip, port_no, name, mode):
         self.nickname = name
         self.ip = ip
         self.port = port_no
         self.local_ip = local_ip  # represents a remote peer's IP on its local network
         self.timestamp = datetime.datetime.now()  # current date and time
+        self.mode = mode
 
 
 class Server(threading.Thread):
@@ -52,10 +55,19 @@ class Server(threading.Thread):
         self.serverSocket.listen(50)  # become a server socket
         self.clients = {}
 
+        # listen on localhost, just in case
+        self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.localSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.localSocket.bind((localhost, port))
+        self.localSocket.listen(50)
+
     def run(self):
 
         # start a thread which periodically checks the list of peers to ensure they are active
         threading.Thread(target=self.prune_dict_thread).start()
+
+        # start a thread which listens for requests on localhost, just in case
+        threading.Thread(target=self.listen_on_localhost).start()
 
         print('Server started!')
 
@@ -66,13 +78,30 @@ class Server(threading.Thread):
                 (clientSocket, client_address) = self.serverSocket.accept()
 
                 d = threading.Thread(name='client',
-                                     target=self.server_thread, args=(clientSocket, client_address))
+                                     target=self.server_thread, args=(clientSocket,))
                 d.setDaemon(True)
                 d.start()
 
             except Exception as e:
                 print(e)
 
+
+    def listen_on_localhost(self):
+
+        while True:
+
+            try:
+                # Establish the connection
+                (clientSocket, client_address) = self.localSocket.accept()
+
+                d = threading.Thread(name='client',
+                                     target=self.server_thread, args=(clientSocket,))
+
+                d.setDaemon(True)
+                d.start()
+
+            except Exception as e:
+                print(e)
 
 
     # this would get called whenever a client pings the server to tell it that it's alive
@@ -87,27 +116,29 @@ class Server(threading.Thread):
             port_no = client_info['PORT_NO']
             nickname = client_info['nickname']
             local_ip = client_info['local_ip']
+            mode = client_info['mode']
 
             # create a mailbox for this user
 
-            if ip_addr == local_ip:
-                # operating in LAN mode but using mailboxes?
+            if mode == 'LAN':
+                # operating in LAN mode - refer to local IP
                 index = local_ip + ':' + str(port_no)
 
             else:
-                # operating over internet
+                # operating over internet - can use public IP
                 index = ip_addr + ':' + str(port_no)
 
-            if self.mailboxes.get(index) is None:
-                self.mailboxes[index] = []  # create mailbox for user
+            # create a mailbox for INTERNET peer if needed
+            if mode == 'INTERNET':
+                if self.mailboxes.get(index) is None:
+                    self.mailboxes[index] = []  # create mailbox for user
 
-            index = ip_addr + ':' + str(port_no)
 
             # acquire lock to make sure we don't corrupt dict - this runs in little time, no expected perf impact
             self.client_dict_lock.acquire()
 
             # client dict will be indexed by "IP:port_no" - replace with a new Peer object with current timestamp
-            self.clients[index] = User(ip_addr, local_ip, port_no, nickname)
+            self.clients[index] = User(ip_addr, local_ip, port_no, nickname, mode)
 
             print('\nPeer updated successfully!')
             print(self.clients)
@@ -140,7 +171,7 @@ class Server(threading.Thread):
 
             self.client_dict_lock.release()
 
-    def server_thread(self, clientSocket, client_addr):
+    def server_thread(self, clientSocket):
         print('\nHandling client connection. . .')
 
         # get the request from browser
@@ -166,9 +197,12 @@ class Server(threading.Thread):
 
         req_type = info['type']
 
+        if req_type == 'TEST_CONNECT':
+            return_data = {'THIS CONTENT DOES NOT MATTER': -1}
+
         if req_type == 'KEEP_ALIVE':
             # update the time which we have last seen this client
-            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip']}
+            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip'], 'mode':info['mode']}
             self.update_peer(client_info)
 
         if req_type == 'REQUEST_PEER_DICT':
@@ -239,7 +273,6 @@ class Server(threading.Thread):
                     print(key, index)
                     self.mailboxes[key].append((sender, png))
 
-
         clientSocket.close()
 
 
@@ -283,12 +316,12 @@ class Server(threading.Thread):
                 print(e)
                 continue  # try again
 
+if __name__ == '__main__':
+    # start server
+    s = Server()
+    s.setDaemon(True)  # allows use of CTRL+C to exit program
+    s.start()
 
-# start server
-s = Server()
-s.setDaemon(True)  # allows use of CTRL+C to exit program
-s.start()
-
-# sleep main thread indefinitely so program doesn't exit
-while True:
-    time.sleep(10000)
+    # sleep main thread indefinitely so program doesn't exit
+    while True:
+        time.sleep(10000)

@@ -12,8 +12,6 @@ from tkinter import *
 import datetime
 from ttkthemes import ThemedStyle
 from tkinter import ttk
-# host to listen for connections on
-host = ''
 
 
 class Peer(threading.Thread):
@@ -49,9 +47,21 @@ class Peer(threading.Thread):
         self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # bind the socket to a public host, and a port
-        self.serverSocket.bind((host, self.port))
+
+        self.serverSocket.bind(('', self.port))
 
         self.serverSocket.listen(10)
+
+        # listen on localhost, just in case
+        localhost = '127.0.0.1'
+        port = 9998
+        self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.localSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.localSocket.bind((localhost, port))
+        self.localSocket.listen(50)
+
+        # start a thread which listens for requests on localhost, just in case
+        threading.Thread(target=self.listen_on_localhost).start()
 
         while True:
             try:
@@ -67,7 +77,27 @@ class Peer(threading.Thread):
             except Exception as e:
                 print(e)
 
-    def peer_thread(self, client_sock, client_addr):
+
+    # listen on localhost just in case you are running multiple peers
+    def listen_on_localhost(self):
+
+        while True:
+
+            try:
+                # Establish the connection
+                (clientSocket, client_address) = self.localSocket.accept()
+
+                d = threading.Thread(name='client',
+                                     target=self.peer_thread, args=(clientSocket,))
+
+                d.setDaemon(True)
+                d.start()
+
+            except Exception as e:
+                print(e)
+
+
+    def peer_thread(self, client_sock):
         # handle receiving an image
         print('Handling message. . .')
 
@@ -218,7 +248,7 @@ class Peer(threading.Thread):
 
                 s.connect((self.server_ip, self.server_port))
 
-                msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4}
+                msg = {'type': 'KEEP_ALIVE', 'port': self.port, 'nickname': self.nickname, 'local_ip': self.local_ipv4, 'mode': self.mode}
 
                 # pickle the dict and send it to server
                 s.sendall(pickle.dumps(msg))
@@ -333,14 +363,18 @@ class Peer(threading.Thread):
 try:
     local_port = int(sys.argv[1])
 except Exception:
-    print('COULDNT READ COMMAND LINE ARG')
-    local_port = 4444
+
+    import random
+    local_port = random.randint(1024, 9999)
+    print('COULDNT READ COMMAND LINE ARG FOR PORT - DEFAULTING TO RANDOM: '+str(local_port))
 
 # Display a welcome GUI
 
 gui = tk.Tk()
 
 nickname = ''
+host = False
+ip_input = ''
 
 # Start a GUI which welcomes the user and prompts for a nickname as well as the chat room to join
 class StartGUI:
@@ -355,6 +389,9 @@ class StartGUI:
 
         global nickname
         nickname = self.input.get()
+
+        global ip_input
+        ip_input = self.input2.get()
 
         if nickname is not None and nickname != '':
             global gui
@@ -372,6 +409,28 @@ class StartGUI:
         global nickname
         nickname = self.input.get()
 
+        global ip_input
+        ip_input = self.input2.get()
+
+        if nickname is not None and nickname != '':
+
+            gui.destroy()
+
+        else:
+            self.err_label.config(text="ERROR: Please enter a nickname!")
+
+    def exit_HOST_LAN(self):
+        global mode
+        mode = 'LAN'
+
+        global gui
+
+        global nickname
+        nickname = self.input.get()
+
+        global host
+        host = True
+
         if nickname is not None and nickname != '':
 
             gui.destroy()
@@ -387,8 +446,8 @@ class StartGUI:
         tabs.pack(expand=1, fill="both")
 
         gui.title('PictoChat The Rebirth')
-        gui.minsize(400, 250)
-        gui.maxsize(400, 250)
+        gui.minsize(400, 260)
+        gui.maxsize(400, 260)
 
         # buttons, labels, and fun stuff
         style = ThemedStyle(gui)
@@ -397,9 +456,11 @@ class StartGUI:
         button1 = ttk.Button(gui, text="Join LAN Chat Room",  command=self.exit_LAN)
         button1.place(x=60, y=155)
 
-
         button2 = ttk.Button(gui, text="Join Internet Chat Room",  command=self.exit_INTERNET)
         button2.place(x=200, y=155)
+
+        button3 = ttk.Button(gui, text="Join LAN Chat + Host a Server", command=self.exit_HOST_LAN)
+        button3.place(x=115, y=190)
 
         label1 = ttk.Label(gui, text="Welcome to PictoChat: The Rebirth!")
         label1.config(font=("Arial", 15))
@@ -415,6 +476,11 @@ class StartGUI:
         self.input = ttk.Entry(gui, width=30)
         self.input.place(x=175, y=110)
 
+        self.input2 = ttk.Entry(gui, width=15)
+        self.input2.place(x=270, y=225)
+
+        self.label3 = ttk.Label(gui, text='Enter the server IP - leave blank if hosting: ')
+        self.label3.place(x=40, y=225)
         # run our gui
         gui.mainloop()
 
@@ -427,6 +493,68 @@ g.run()
 
 del gui
 
+
+if ip_input == '':
+    server_ip = '127.0.0.1'
+
+else:
+    server_ip = ip_input
+
+# if user has elected to host - host a server!
+if host is True:
+    # start our own server
+    import server
+    s = server.Server()
+    s.setDaemon(True)
+    s.start()
+    server_ip = '127.0.0.1'  # server accepts localhost connections
+
+
+# if we are hosting a server on this machine, try to use it as the server
+if mode == 'LAN':
+    try:
+        # create socket connection
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', 9998))
+
+        # ping
+        s.send(pickle.dumps({'type': 'TEST_CONNECT'}))
+
+        data = pickle.loads(s.recv(128))
+
+        # if no timeout, we use localhost as server!
+        server_ip = '127.0.0.1'
+
+    except Exception:
+        pass
+
+print("IP INPUT BY USER: "+ip_input)
+# if user has entered a server, try to see if it responds and use it if it does
+if ip_input.strip(' ') != '' and server_ip != '127.0.0.1':
+
+    server_ip = ip_input.strip(' ')
+
+    try:
+        # create socket connection
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((server_ip, 9998))
+
+        # ping
+        s.send(pickle.dumps({'type': 'TEST_CONNECT'}))
+
+        # wait for response
+        data = pickle.loads(s.recv(32))
+
+        # if server responds, we use the server
+
+    except Exception:
+        # try to use localhost anyways
+        server_ip = '127.0.0.1'
+        pass
+
+
+print("USING SERVER: "+server_ip)
+
 # User closed out of welcome GUI - don't start anything else
 if mode == '':
     exit()
@@ -438,8 +566,8 @@ if nickname == '':
 # else... continue
 
 print("STARTING PEER IN " + mode + " MODE - Nickname: " + nickname)
-
-cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": '140.186.135.58', "SERVER_PORT": 9998, "name": nickname, "mode": mode}
+print("PORT: "+str(local_port))
+cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": server_ip, "SERVER_PORT": 9998, "name": nickname, "mode": mode}
 
 p = Peer(cfg)
 p.setDaemon(True)  # allows use of CTRL+C to exit program
