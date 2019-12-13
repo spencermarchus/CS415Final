@@ -8,16 +8,10 @@ import datetime
 import time
 import _pickle as pickle
 
-
-
 host = ''
 port = 9998
 
 localhost = '127.0.0.1'
-
-
-# only one thread can modify the dict at one time
-
 
 class User:
 
