@@ -1,13 +1,15 @@
 # CS415Final
 
 Step-by-Step Instructions to Run Application
-The directions to run the program are as follows. You will have issues if you do not. . .
 
-These directions are given in our submission as well - they may be easier to read there.
+These directions are copy/pasted from our online submission.
+
+The directions to run the program are as follows. You will have issues if you do not follow them. . .
 
 Ghostscript is a dependency which enables saving Tkinter canvases to .png files. 
+
 On Windows, install Ghostscript and add the “C:\Program Files\gs\gs9.50\bin” folder to your PATH environment variable on computers that will act as peers.
-(Verify the actual installation directory, as it may vary)
+
 https://www.ghostscript.com/download/gsdnld.html
 
 Unfortunately, we do not know of the install procedure for Ubuntu or MacOS as we have not tested this. While we expect it to still work, we just don’t know the exact installation instructions.
@@ -37,15 +39,6 @@ If any of this was too confusing - feel free to reach out to spencer.marchus@nds
 
 
 -Spencer, McKenna, Cameron, and Jack
-
-
-
-
-
-
-
-
-
 
 
 COPYRIGHT:
