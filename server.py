@@ -182,6 +182,9 @@ class Server(threading.Thread):
 
             # remove client from peers dict
             index = h+':'+str(info['port'])
+
+            print(self.clients)
+
             del self.clients[index]
 
             print('Removed '+index+' due to QUIT command. . .')
