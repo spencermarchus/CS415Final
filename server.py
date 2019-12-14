@@ -9,8 +9,6 @@ Cameron Ethier
 Jack Olson
 """
 
-
-
 import socket
 import threading
 import datetime
@@ -24,6 +22,7 @@ port = 9001
 
 localhost = '127.0.0.1'
 
+
 # Represents a user connected to the network
 class User:
 
@@ -34,6 +33,7 @@ class User:
         self.local_ip = local_ip  # represents a remote peer's IP on its local network
         self.timestamp = datetime.datetime.now()  # current date and time
         self.mode = mode
+
 
 # Server thread - listens for connections from others on localhost (if possible) and
 class Server(threading.Thread):
@@ -89,6 +89,8 @@ class Server(threading.Thread):
             print("CLOSING SOCKETS. . .")
             self.serverSocket.close()
             self.localSocket.close()
+        except Exception as e:
+            pass
         finally:
             sys.exit(0)
 
@@ -101,8 +103,7 @@ class Server(threading.Thread):
         if self.local_socket_success:
             threading.Thread(target=self.listen_on_localhost).start()
 
-
-        print('Server started on port '+str(port))
+        print('Server started on port ' + str(port))
 
         while True:
 
@@ -117,7 +118,6 @@ class Server(threading.Thread):
 
             except Exception as e:
                 print(e)
-
 
     def listen_on_localhost(self):
 
@@ -135,7 +135,6 @@ class Server(threading.Thread):
 
             except Exception as e:
                 print(e)
-
 
     # this would get called whenever a client pings the server to tell it that it's alive
     def update_peer(self, client_info):
@@ -164,7 +163,6 @@ class Server(threading.Thread):
             if mode == 'INTERNET':
                 if self.mailboxes.get(index) is None:
                     self.mailboxes[index] = []  # create mailbox for user
-
 
             # acquire lock to make sure we don't corrupt dict - this runs in little time, no expected perf impact
             self.client_dict_lock.acquire()
@@ -224,7 +222,6 @@ class Server(threading.Thread):
         # the connected client's IP addr
         h, p = clientSocket.getpeername()
 
-
         if info['type'] not in ['IMAGE', 'INTERNET_MSG']:
             print('\nMessage from client: ')
             print(info)
@@ -240,7 +237,8 @@ class Server(threading.Thread):
 
         if req_type == 'KEEP_ALIVE':
             # update the time which we have last seen this client
-            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip'], 'mode':info['mode']}
+            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip'],
+                           'mode': info['mode']}
             self.update_peer(client_info)
 
         if req_type == 'REQUEST_PEER_DICT':
@@ -253,7 +251,7 @@ class Server(threading.Thread):
                 print(key)
 
             # remove client from peers dict
-            index = h+':'+str(info['port'])
+            index = h + ':' + str(info['port'])
 
             print(self.clients)
 
@@ -271,7 +269,7 @@ class Server(threading.Thread):
 
             except Exception as e:
                 # user must be hosting server in separate window - try deleting peer at index of their local IP
-                local_ip_index = info['local_ip']+':'+str(info['port'])
+                local_ip_index = info['local_ip'] + ':' + str(info['port'])
                 del self.clients[local_ip_index]
                 print('Removed ' + local_ip_index + ' due to QUIT command. . .')
 
@@ -287,7 +285,7 @@ class Server(threading.Thread):
 
             if ip == local_ip:
                 # operating in internet mode on LAN for some reason - refer to peer using its local IP
-                index = local_ip+':'+str(port)
+                index = local_ip + ':' + str(port)
 
             else:
                 # truly operating over the internet - refer to peer using IP not local IP
@@ -305,7 +303,7 @@ class Server(threading.Thread):
                 clientSocket.sendall(data)
 
             else:
-                return # take no further action
+                return  # take no further action
 
         if req_type == "INTERNET_MSG":
             # message is to be sent to clients over network
@@ -324,13 +322,11 @@ class Server(threading.Thread):
                 index = ip + ':' + str(port)
 
             for key in self.mailboxes:
-                if key != index: # don't send to yourself
+                if key != index:  # don't send to yourself
                     print(key, index)
                     self.mailboxes[key].append((sender, png))
 
         clientSocket.close()
-
-
 
     # this is meant to be a thread that runs indefinitely
     # in general, loop approximately every few seconds and remove peer if a given peer is not active
@@ -370,6 +366,7 @@ class Server(threading.Thread):
             except Exception as e:
                 print(e)
                 continue  # try again
+
 
 if __name__ == '__main__':
     # start server
