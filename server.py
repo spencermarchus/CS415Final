@@ -62,6 +62,8 @@ class Server(threading.Thread):
             self.localSocket.bind((localhost, port))
             self.localSocket.listen(50)
             self.local_socket_success = True
+        except Exception as e:
+            pass
         finally:
             pass
 
@@ -82,7 +84,7 @@ class Server(threading.Thread):
         # start a thread which listens for requests on localhost, just in case
         if self.local_socket_success:
             threading.Thread(target=self.listen_on_localhost).start()
-        
+
 
         print('Server started!')
 
