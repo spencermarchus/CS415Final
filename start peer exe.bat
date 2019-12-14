@@ -1,3 +1,3 @@
 cd dist
-peer 4444 
+peer
 pause

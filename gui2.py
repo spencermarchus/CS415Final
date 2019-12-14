@@ -103,13 +103,17 @@ class Image_Display_GUI(threading.Thread):
             selection = self.Listbox.curselection()[0]
         except Exception as e:
             pass
-        # delete the selection from the listbox
-        self.Listbox.delete(selection)
-        # delete the selection from the peer's list of images
-        self.peer.delete_image(selection)
 
-        if self.Listbox.size() == 0:
+        if self.Listbox.size() == 1:
+            self.Listbox.delete(0)
+            self.peer.delete_image(0)
             self.canvas.delete('all')
+
+        elif self.Listbox.size() > 0:
+            # delete the selection from the listbox
+            self.Listbox.delete(selection)
+            # delete the selection from the peer's list of images
+            self.peer.delete_image(selection)
 
 
     # override the run method of Thread... readability of this is horrible, but we have to create all the instance

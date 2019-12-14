@@ -101,9 +101,8 @@ class Server(threading.Thread):
     # this would get called whenever a client pings the server to tell it that it's alive
     def update_peer(self, client_info):
 
-        # if user is unknown, add them to the list all the same
-
-        # again, if user is unknown, respond with OK message telling user they have connected
+        # if user is unknown, add them to the list
+        # if user is known, update their info
 
         try:
             ip_addr = client_info['IP']
@@ -213,9 +212,26 @@ class Server(threading.Thread):
 
             print(self.clients)
 
-            del self.clients[index]
+            # try to delete the user's mailbox - should succeed if on INTERNET mode
+            try:
+                del self.mailboxes[index]
+                print('Removed ' + index + '\'s mailbox due to QUIT command. . .')
+            finally:
+                pass
 
-            print('Removed '+index+' due to QUIT command. . .')
+            try:
+                # this should succeed for INTERNET or LAN mode. . .
+                del self.clients[index]
+                print('Removed ' + index + ' due to QUIT command. . .')
+
+            except Exception as e:
+                # user must be hosting server in separate window - try deleting peer at index of their local IP
+                local_ip_index = info['local_ip']+':'+str(info['port'])
+                del self.clients[local_ip_index]
+                print('Removed ' + local_ip_index + ' due to QUIT command. . .')
+
+            finally:
+                pass
 
         if req_type == "MSG_CHECK":
             # check if the peer has any messages waiting

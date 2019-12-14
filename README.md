@@ -1,4 +1,9 @@
 # CS415Final
+Team:
+Cameron Ethier
+Spencer Marchus
+McKenna O'Brien
+Jack Olson
 
 Step-by-Step Instructions to Run Application
 
