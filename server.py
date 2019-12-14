@@ -202,131 +202,139 @@ class Server(threading.Thread):
             self.client_dict_lock.release()
 
     def server_thread(self, clientSocket):
-        print('\nHandling client connection. . .')
 
-        # get the request from browser
-        data = b''
+        try:
 
-        while True:
-            part = clientSocket.recv(128)
-            data += part
+            print('\nHandling client connection. . .')
 
-            if len(part) < 128:
+            # get the request from browser
+            data = b''
+
+            while True:
+                part = clientSocket.recv(128)
                 data += part
-                break
 
-        info = pickle.loads(data)
+                if len(part) < 128:
+                    data += part
+                    break
 
-        # str_data = data.decode()
+            info = pickle.loads(data)
 
-        # the connected client's IP addr
-        h, p = clientSocket.getpeername()
+            # str_data = data.decode()
 
-        if info['type'] not in ['IMAGE', 'INTERNET_MSG']:
-            print('\nMessage from client: ')
-            print(info)
+            # the connected client's IP addr
+            h, p = clientSocket.getpeername()
 
-        else:
-            print("Message from client: IMAGE FILE")
-
-        req_type = info['type']
-
-        if req_type == 'TEST_CONNECT':
-            return_data = {'THIS CONTENT DOES NOT MATTER': -1}
-            clientSocket.sendall(pickle.dumps(return_data))
-
-        if req_type == 'KEEP_ALIVE':
-            # update the time which we have last seen this client
-            client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip'],
-                           'mode': info['mode']}
-            self.update_peer(client_info)
-
-        if req_type == 'REQUEST_PEER_DICT':
-            # respond with directory of all active clients
-            self.send_list_of_all_peers_to_peer(clientSocket)
-
-        if req_type == 'QUIT':
-
-            for key in self.clients:
-                print(key)
-
-            # remove client from peers dict
-            index = h + ':' + str(info['port'])
-
-            print(self.clients)
-
-            # try to delete the user's mailbox - should succeed if on INTERNET mode
-            try:
-                del self.mailboxes[index]
-                print('Removed ' + index + '\'s mailbox due to QUIT command. . .')
-            finally:
-                pass
-
-            try:
-                # this should succeed for INTERNET or LAN mode. . .
-                del self.clients[index]
-                print('Removed ' + index + ' due to QUIT command. . .')
-
-            except Exception as e:
-                # user must be hosting server in separate window - try deleting peer at index of their local IP
-                local_ip_index = info['local_ip'] + ':' + str(info['port'])
-                del self.clients[local_ip_index]
-                print('Removed ' + local_ip_index + ' due to QUIT command. . .')
-
-            finally:
-                pass
-
-        if req_type == "MSG_CHECK":
-            # check if the peer has any messages waiting
-            # assume that the peer is not on the same LAN as the server
-            local_ip = info['local_ip']
-            ip = h
-            port = info['port']
-
-            if ip == local_ip:
-                # operating in internet mode on LAN for some reason - refer to peer using its local IP
-                index = local_ip + ':' + str(port)
+            if info['type'] not in ['IMAGE', 'INTERNET_MSG']:
+                print('\nMessage from client: ')
+                print(info)
 
             else:
-                # truly operating over the internet - refer to peer using IP not local IP
-                index = ip + ':' + str(port)
+                print("Message from client: IMAGE FILE")
 
-            if self.mailboxes.get(index) is not None:
-                return_data = {'data': []}
-                for tup in self.mailboxes[index]:
-                    print("\nRETURNING IMAGE\n")
-                    return_data['data'].append((tup[0], tup[1]))
+            req_type = info['type']
 
-                self.mailboxes[index] = []  # messages will be sent to user, so remove them from central server
+            if req_type == 'TEST_CONNECT':
+                return_data = {'THIS CONTENT DOES NOT MATTER': -1}
+                clientSocket.sendall(pickle.dumps(return_data))
 
-                data = pickle.dumps(return_data)
-                clientSocket.sendall(data)
+            if req_type == 'KEEP_ALIVE':
+                # update the time which we have last seen this client
+                client_info = {'IP': h, 'PORT_NO': info['port'], 'nickname': info['nickname'], 'local_ip': info['local_ip'],
+                               'mode': info['mode']}
+                self.update_peer(client_info)
 
-            else:
-                return  # take no further action
+            if req_type == 'REQUEST_PEER_DICT':
+                # respond with directory of all active clients
+                self.send_list_of_all_peers_to_peer(clientSocket)
 
-        if req_type == "INTERNET_MSG":
-            # message is to be sent to clients over network
-            ip = h
-            local_ip = info['local_ip']
-            port = info['port']
-            sender = info['sender']
-            png = info['data']
+            if req_type == 'QUIT':
 
-            if ip == local_ip:
-                # operating in internet mode on LAN for some reason but continue
-                index = local_ip + ':' + str(port)
+                for key in self.clients:
+                    print(key)
 
-            else:
-                # truly operating over the internet - use IP not Local IP
-                index = ip + ':' + str(port)
+                # remove client from peers dict
+                index = h + ':' + str(info['port'])
 
-            for key in self.mailboxes:
-                if key != index:  # don't send to yourself
-                    print(key, index)
-                    self.mailboxes[key].append((sender, png))
+                print(self.clients)
 
-        clientSocket.close()
+                # try to delete the user's mailbox - should succeed if on INTERNET mode
+                try:
+                    del self.mailboxes[index]
+                    print('Removed ' + index + '\'s mailbox due to QUIT command. . .')
+                except:
+                    pass
+
+
+                try:
+                    # this should succeed for INTERNET or LAN mode. . .
+                    del self.clients[index]
+                    print('Removed ' + index + ' due to QUIT command. . .')
+
+                except Exception as e:
+                    # user must be hosting server in separate window - try deleting peer at index of their local IP
+                    local_ip_index = info['local_ip'] + ':' + str(info['port'])
+                    del self.clients[local_ip_index]
+                    print('Removed ' + local_ip_index + ' due to QUIT command. . .')
+
+                finally:
+                    pass
+
+            if req_type == "MSG_CHECK":
+                # check if the peer has any messages waiting
+                # assume that the peer is not on the same LAN as the server
+                local_ip = info['local_ip']
+                ip = h
+                port = info['port']
+
+                if ip == local_ip:
+                    # operating in internet mode on LAN for some reason - refer to peer using its local IP
+                    index = local_ip + ':' + str(port)
+
+                else:
+                    # truly operating over the internet - refer to peer using IP not local IP
+                    index = ip + ':' + str(port)
+
+                if self.mailboxes.get(index) is not None:
+                    return_data = {'data': []}
+                    for tup in self.mailboxes[index]:
+                        print("\nRETURNING IMAGE\n")
+                        return_data['data'].append((tup[0], tup[1]))
+
+                    self.mailboxes[index] = []  # messages will be sent to user, so remove them from central server
+
+                    data = pickle.dumps(return_data)
+                    clientSocket.sendall(data)
+
+                else:
+                    return  # take no further action
+
+            if req_type == "INTERNET_MSG":
+                # message is to be sent to clients over network
+                ip = h
+                local_ip = info['local_ip']
+                port = info['port']
+                sender = info['sender']
+                png = info['data']
+
+                if ip == local_ip:
+                    # operating in internet mode on LAN for some reason but continue
+                    index = local_ip + ':' + str(port)
+
+                else:
+                    # truly operating over the internet - use IP not Local IP
+                    index = ip + ':' + str(port)
+
+                for key in self.mailboxes:
+                    if key != index:  # don't send to yourself
+                        print(key, index)
+                        self.mailboxes[key].append((sender, png))
+
+        except Exception as e:
+            print("EXCEPTION IN SERVER THREAD. . .")
+            print(e)
+        finally:
+            clientSocket.close()
 
     # this is meant to be a thread that runs indefinitely
     # in general, loop approximately every few seconds and remove peer if a given peer is not active

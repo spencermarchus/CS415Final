@@ -411,7 +411,7 @@ try:
     local_port = int(sys.argv[1])
 except Exception:
     import random
-    local_port = random.randint(1024, 9999)
+    local_port = random.randint(1024, 8999)
     print('COULDNT READ COMMAND LINE ARG FOR PORT - DEFAULTING TO RANDOM: '+str(local_port))
 
 # Display a welcome GUI
