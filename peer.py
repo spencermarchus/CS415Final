@@ -321,7 +321,6 @@ class Peer(threading.Thread):
                 png = tup[1]
                 self.handle_image(png, sender)
 
-            end = time.time()
             time.sleep(3)
 
         except Exception as e:
@@ -526,7 +525,7 @@ else:
     server_ip = ip_input
 
 # if user has elected to host - host a server!
-if host is True:
+if host:
     # start our own server
     import server
     s = server.Server()
@@ -573,7 +572,7 @@ if ip_input.strip(' ') != '' and server_ip != '127.0.0.1':
         # if server responds, we use the server
 
     except Exception as e:
-        print(e)
+        print("COULD NOT CONNECT TO SERVER: "+server_ip)
         # try to use localhost anyways
         server_ip = '127.0.0.1'
         pass

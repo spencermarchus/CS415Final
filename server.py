@@ -208,8 +208,13 @@ class Server(threading.Thread):
         # the connected client's IP addr
         h, p = clientSocket.getpeername()
 
-        print('\nMessage from client: ')
-        print(info)
+
+        if info['type'] not in ['IMAGE', 'INTERNET_MSG']:
+            print('\nMessage from client: ')
+            print(info)
+
+        else:
+            print("Message from client: IMAGE FILE")
 
         req_type = info['type']
 
