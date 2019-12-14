@@ -102,7 +102,7 @@ class Server(threading.Thread):
             threading.Thread(target=self.listen_on_localhost).start()
 
 
-        print('Server started!')
+        print('Server started on port '+str(port))
 
         while True:
 
