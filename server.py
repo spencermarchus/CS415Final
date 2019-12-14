@@ -54,11 +54,16 @@ class Server(threading.Thread):
         self.serverSocket.listen(50)  # become a server socket
         self.clients = {}
 
-        # listen on localhost, just in case
-        self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.localSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.localSocket.bind((localhost, port))
-        self.localSocket.listen(50)
+        # try to listen on localhost, just in case
+        self.local_socket_success = False
+        try:
+            self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.localSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.localSocket.bind((localhost, port))
+            self.localSocket.listen(50)
+            self.local_socket_success = True
+        finally:
+            pass
 
     def signal_handler(self, sig, frame):
         try:
@@ -75,7 +80,9 @@ class Server(threading.Thread):
         threading.Thread(target=self.prune_dict_thread).start()
 
         # start a thread which listens for requests on localhost, just in case
-        threading.Thread(target=self.listen_on_localhost).start()
+        if self.local_socket_success:
+            threading.Thread(target=self.listen_on_localhost).start()
+        
 
         print('Server started!')
 
