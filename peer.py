@@ -135,7 +135,7 @@ class Peer(threading.Thread):
             self.handle_image(img, sender)
 
         else:
-            print("UNKNOWN MESSAGE TYPE RECEIVED: " + data_loaded)
+            print("UNKNOWN MESSAGE TYPE RECEIVED: " + str(data_loaded))
 
 
     # send an image to all known peers
@@ -568,11 +568,12 @@ if ip_input.strip(' ') != '' and server_ip != '127.0.0.1':
         s.send(pickle.dumps({'type': 'TEST_CONNECT'}))
 
         # wait for response
-        data = pickle.loads(s.recv(32))
+        data = pickle.loads(s.recv(1024))
 
         # if server responds, we use the server
 
-    except Exception:
+    except Exception as e:
+        print(e)
         # try to use localhost anyways
         server_ip = '127.0.0.1'
         pass

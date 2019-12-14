@@ -215,6 +215,7 @@ class Server(threading.Thread):
 
         if req_type == 'TEST_CONNECT':
             return_data = {'THIS CONTENT DOES NOT MATTER': -1}
+            clientSocket.sendall(pickle.dumps(return_data))
 
         if req_type == 'KEEP_ALIVE':
             # update the time which we have last seen this client
