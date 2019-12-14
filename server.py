@@ -7,6 +7,8 @@ import threading
 import datetime
 import time
 import _pickle as pickle
+import signal
+import sys
 
 host = ''
 port = 9998
@@ -29,6 +31,9 @@ class Server(threading.Thread):
     def __init__(self, config={}):
 
         super(Server, self).__init__()
+
+        # on shutdown, release the sockets
+        signal.signal(signal.SIGINT, self.signal_handler)
 
         self.CLIENT_TIMEOUT_MINS = 2
 
@@ -54,6 +59,15 @@ class Server(threading.Thread):
         self.localSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.localSocket.bind((localhost, port))
         self.localSocket.listen(50)
+
+    def signal_handler(self, sig, frame):
+        try:
+            print('You pressed Ctrl+C!')
+            print("CLOSING SOCKETS. . .")
+            self.serverSocket.close()
+            self.localSocket.close()
+        finally:
+            sys.exit(0)
 
     def run(self):
 
@@ -334,4 +348,4 @@ if __name__ == '__main__':
 
     # sleep main thread indefinitely so program doesn't exit
     while True:
-        time.sleep(10000)
+        time.sleep(10)
