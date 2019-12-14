@@ -9,13 +9,6 @@ Cameron Ethier
 Jack Olson
 """
 
-
-
-
-
-
-
-
 import os
 import signal
 import socket
@@ -80,7 +73,7 @@ class Peer(threading.Thread):
 
         # listen on localhost, just in case
         localhost = '127.0.0.1'
-        port = 9998
+        port = 9001
         try:
             self.local_socket_success = False
             self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -574,7 +567,7 @@ if mode == 'LAN':
     try:
         # create socket connection
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', 9998))
+        s.connect(('127.0.0.1', 9001))
 
         # ping
         s.send(pickle.dumps({'type': 'TEST_CONNECT'}))
@@ -596,7 +589,7 @@ if ip_input.strip(' ') != '' and server_ip != '127.0.0.1':
     try:
         # create socket connection
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((server_ip, 9998))
+        s.connect((server_ip, 9001))
 
         # ping
         s.send(pickle.dumps({'type': 'TEST_CONNECT'}))
@@ -627,7 +620,7 @@ if nickname == '':
 
 print("STARTING PEER IN " + mode + " MODE - Nickname: " + nickname)
 print("PORT: "+str(local_port))
-cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": server_ip, "SERVER_PORT": 9998, "name": nickname, "mode": mode}
+cfg = {"LOCAL_PORT_NO": local_port, "SERVER_IP": server_ip, "SERVER_PORT": 9001, "name": nickname, "mode": mode}
 
 p = Peer(cfg)
 p.setDaemon(True)  # allows use of CTRL+C to exit program

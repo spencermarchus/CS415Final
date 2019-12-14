@@ -36,6 +36,7 @@ class Image_Display_GUI(threading.Thread):
         self.msg_counter = 0
 
     # watch indefinitely for incoming messages
+    # if message has been received in the list within Peer, update this GUI
     def watch_for_incoming_messages(self):
 
         previous_state = 0
@@ -94,19 +95,17 @@ class Image_Display_GUI(threading.Thread):
                     except Exception as e:
                         self.Listbox.selection_set(first='end')
 
-
-
             except Exception as e:
                 print(e)
                 pass
 
             finally:
-
                 self.peer.peer_list_lock.release()
 
                 if not needs_updated_flag:
                     time.sleep(.05)  # sleep a bit if we don't need to do an update in the next loop iteration
 
+    # delete image from the listbox
     def delete_selected_msg(self):
         selection = -1
         try:
@@ -115,6 +114,7 @@ class Image_Display_GUI(threading.Thread):
         except Exception as e:
             pass
 
+        # if there's only one image, delete it and wipe the Canvas
         if self.Listbox.size() == 1:
             self.Listbox.delete(0)
             self.peer.delete_image(0)

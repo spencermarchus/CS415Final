@@ -20,10 +20,11 @@ import signal
 import sys
 
 host = ''
-port = 9998
+port = 9001
 
 localhost = '127.0.0.1'
 
+# Represents a user connected to the network
 class User:
 
     def __init__(self, ip, local_ip, port_no, name, mode):
@@ -34,7 +35,7 @@ class User:
         self.timestamp = datetime.datetime.now()  # current date and time
         self.mode = mode
 
-
+# Server thread - listens for connections from others on localhost (if possible) and
 class Server(threading.Thread):
 
     def __init__(self, config={}):
