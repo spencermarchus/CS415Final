@@ -1,3 +1,14 @@
+"""
+CS415 Final - PictoChat: The Rebirth
+Message Received GUI
+This represents a GUI in which a user would view incoming messages from others
+
+Spencer Marchus
+McKenna O'Brien
+Cameron Ethier
+Jack Olson
+"""
+
 import io
 import os
 import datetime

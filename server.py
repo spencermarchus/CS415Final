@@ -1,6 +1,15 @@
-#!/usr/bin/env python
+"""
+CS415 Final - PictoChat: The Rebirth
+Server
+Represents a central server on the network - used as a directory and/or mailbox
 
-# this is a starter server implementation - this code is untested and will be buggy / incomplete for now
+Spencer Marchus
+McKenna O'Brien
+Cameron Ethier
+Jack Olson
+"""
+
+
 
 import socket
 import threading
@@ -29,44 +38,50 @@ class User:
 class Server(threading.Thread):
 
     def __init__(self, config={}):
-
-        super(Server, self).__init__()
-
-        # on shutdown, release the sockets
-        signal.signal(signal.SIGINT, self.signal_handler)
-
-        self.CLIENT_TIMEOUT_MINS = 2
-
-        # Create a TCP socket
-        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        self.client_dict_lock = threading.Lock()
-
-        # Re-use the socket
-        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-        # when operating in centralized-server mode, maintain mailboxes
-        self.mailboxes = {}
-
-        # bind the socket to a public host, and a port
-        self.serverSocket.bind((host, port))
-
-        self.serverSocket.listen(50)  # become a server socket
-        self.clients = {}
-
-        # try to listen on localhost, just in case
-        self.local_socket_success = False
         try:
-            self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.localSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.localSocket.bind((localhost, port))
-            self.localSocket.listen(50)
-            self.local_socket_success = True
-        except Exception as e:
-            pass
-        finally:
-            pass
+            super(Server, self).__init__()
 
+            # on shutdown, release the sockets
+            signal.signal(signal.SIGINT, self.signal_handler)
+
+            self.CLIENT_TIMEOUT_MINS = 2
+
+            # Create a TCP socket
+            self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            self.client_dict_lock = threading.Lock()
+
+            # Re-use the socket
+            self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+            # when operating in centralized-server mode, maintain mailboxes
+            self.mailboxes = {}
+
+            # bind the socket to a public host, and a port
+            self.serverSocket.bind((host, port))
+
+            self.serverSocket.listen(50)  # become a server socket
+            self.clients = {}
+
+            # try to listen on localhost, just in case
+            self.local_socket_success = False
+            try:
+                self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.localSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self.localSocket.bind((localhost, port))
+                self.localSocket.listen(50)
+                self.local_socket_success = True
+            except Exception as e:
+                print("Exception initializing localhost socket. . .")
+                pass
+
+
+        except Exception as e:
+            print(e)
+            print("ERROR ON STARTUP, exiting. . .")
+            self.signal_handler()
+
+    # on exit, release sockets and exit
     def signal_handler(self, sig, frame):
         try:
             print('You pressed Ctrl+C!')

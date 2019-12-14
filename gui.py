@@ -1,4 +1,15 @@
-# imports
+"""
+CS415 Final - PictoChat: The Rebirth
+Canvas GUI
+This represents a GUI in which a user would draw and send an image
+
+Spencer Marchus
+McKenna O'Brien
+Cameron Ethier
+Jack Olson
+"""
+
+
 import io
 import os
 import time

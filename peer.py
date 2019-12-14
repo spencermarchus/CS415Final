@@ -1,3 +1,21 @@
+"""
+CS415 Final - PictoChat: The Rebirth
+Peer Class
+Represents a user on the PictoChat network
+
+Spencer Marchus
+McKenna O'Brien
+Cameron Ethier
+Jack Olson
+"""
+
+
+
+
+
+
+
+
 import os
 import signal
 import socket
@@ -18,49 +36,63 @@ from tkinter import ttk
 class Peer(threading.Thread):
 
     def __init__(self, config):
+        try:
+            super(Peer, self).__init__()
 
-        super(Peer, self).__init__()
+            # keep track of our relevant info
+            self.port = config["LOCAL_PORT_NO"]
+            self.local_ipv4 = socket.gethostbyname(socket.gethostname())
+            self.server_ip = config["SERVER_IP"]
+            self.server_port = config["SERVER_PORT"]
 
-        self.port = config["LOCAL_PORT_NO"]
-        self.local_ipv4 = socket.gethostbyname(socket.gethostname())
-        self.server_ip = config["SERVER_IP"]
-        self.server_port = config["SERVER_PORT"]
+            # on shutdown, release the sockets
+            signal.signal(signal.SIGINT, self.signal_handler)
 
-        # on shutdown, release the sockets
-        signal.signal(signal.SIGINT, self.signal_handler)
+            # keep a list of all images received for GUIs
+            self.images_received = []
+            self.mode = config['mode']
+            self.nickname = config['name']
 
-        self.images_received = []
+            # ping the server to maintain alive status
+            keep_alive = threading.Thread(name='keep_alive', target=self.ping_server_periodically, args=())
+            keep_alive.setDaemon(True)
+            keep_alive.start()
 
-        self.mode = config['mode']
+            # Create a TCP socket to listen for connections
+            self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        self.nickname = config['name']
+            # Re-use the socket
+            self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        keep_alive = threading.Thread(name='keep_alive', target=self.ping_server_periodically, args=())
-        keep_alive.setDaemon(True)
-        keep_alive.start()
+            # bind the socket to a public host, and a port
 
-        # Create a TCP socket to listen for connections
-        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.serverSocket.bind(('', self.port))
 
-        # Re-use the socket
-        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.serverSocket.listen(10)
 
-        # bind the socket to a public host, and a port
+            # lock on image list
+            self.peer_list_lock = threading.Lock()
 
-        self.serverSocket.bind(('', self.port))
-
-        self.serverSocket.listen(10)
+        except Exception as e:
+            print(e)
+            print("ERROR ON STARTUP, exiting. . .")
+            self.signal_handler()
 
         # listen on localhost, just in case
         localhost = '127.0.0.1'
         port = 9998
-        self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.localSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.localSocket.bind((localhost, port))
-        self.localSocket.listen(50)
+        try:
+            self.local_socket_success = False
+            self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.localSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.localSocket.bind((localhost, port))
+            self.localSocket.listen(50)
+            self.local_socket_success = True
+        except Exception as e:
+            print("Exception initializing localhost socket. . .")
+            pass
 
-        self.peer_list_lock = threading.Lock()
-
+    # on exit, release sockets and exit
     def signal_handler(self, sig, frame):
         try:
             print('You pressed Ctrl+C!')
@@ -73,8 +105,10 @@ class Peer(threading.Thread):
     def run(self):
 
         # start a thread which listens for requests on localhost, just in case
-        threading.Thread(target=self.listen_on_localhost).start()
+        if self.local_socket_success:
+            threading.Thread(target=self.listen_on_localhost).start()
 
+        # listen forever
         while True:
             try:
                 # handle incoming connections
@@ -92,7 +126,7 @@ class Peer(threading.Thread):
 
     # listen on localhost just in case you are running multiple peers
     def listen_on_localhost(self):
-
+        # listen forever
         while True:
 
             try:
@@ -164,6 +198,8 @@ class Peer(threading.Thread):
             # get list of all active peers from server
             client_dict = self.get_active_peers()
 
+            print("RETRIEVED CLIENT DICT")
+
             self.handle_image(png, "Me")
 
             # iterate over peers and send the image in separate threads
@@ -202,8 +238,7 @@ class Peer(threading.Thread):
             img_s.close()
 
         except Exception as e:
-            print(e)
-            print('Could not make connection to peer!')
+            pass  # tried to send to user that has disconnected!
 
     # simply append the image, its sender, and a timestamp to our list in a tuple
     # watcher threads in GUI handle the rest
@@ -362,7 +397,7 @@ class Peer(threading.Thread):
                 part = s.recv(128)
                 data += part
 
-                if len(part) < 128:
+                if not part:
                     break
 
             return_data = pickle.loads(data)
@@ -470,7 +505,7 @@ class StartGUI:
         tabs = ttk.Notebook(gui)
         tabs.pack(expand=1, fill="both")
 
-        gui.title('PictoChat The Rebirth')
+        gui.title('PictoChat: The Rebirth')
         gui.minsize(400, 260)
         gui.maxsize(400, 260)
 
