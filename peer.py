@@ -71,7 +71,7 @@ class Peer(threading.Thread):
             print("ERROR ON STARTUP, exiting. . .")
             self.signal_handler()
 
-        # listen on localhost, just in case
+        # try to listen on localhost, just in case
         localhost = '127.0.0.1'
         port = 9001
         try:
@@ -92,6 +92,8 @@ class Peer(threading.Thread):
             print("CLOSING SOCKETS. . .")
             self.serverSocket.close()
             self.localSocket.close()
+        except Exception as e:
+            pass
         finally:
             sys.exit(0)
 

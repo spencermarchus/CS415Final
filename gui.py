@@ -69,7 +69,7 @@ class Canvas_GUI_Wrapper(threading.Thread):
     def newBGColor(self):
         self.bgColor = colorchooser.askcolor()
         self.button6.config(bg=self.bgColor[1])
-        self.canvas.configure(bg=self.bgColor[1])
+        self.canvas.config(bg=self.bgColor[1])
 
     def rainbowColor(self, rainbow_index):
         if self.rainbowOn:
