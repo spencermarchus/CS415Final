@@ -73,7 +73,7 @@ class Peer(threading.Thread):
 
         # try to listen on localhost, just in case
         localhost = '127.0.0.1'
-        port = 9001
+        port = self.port
         try:
             self.local_socket_success = False
             self.localSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -112,7 +112,7 @@ class Peer(threading.Thread):
                 (clientSocket, client_address) = self.serverSocket.accept()
 
                 d = threading.Thread(name='client',
-                                     target=self.peer_thread, args=(clientSocket, client_address))
+                                     target=self.peer_thread, args=(clientSocket))
                 d.setDaemon(True)  # can run in background, will not prevent program from closing
                 d.start()
             except Exception as e:
@@ -140,7 +140,7 @@ class Peer(threading.Thread):
 
     def peer_thread(self, client_sock):
         # handle receiving an image
-        print('Handling message. . .')
+        print('Handling message')
 
         data = b''
 
@@ -162,9 +162,6 @@ class Peer(threading.Thread):
             print("Image recieved from " + sender)
             # save the image received to a list
             self.handle_image(img, sender)
-
-        else:
-            print("UNKNOWN MESSAGE TYPE RECEIVED: " + str(data_loaded))
 
 
     # send an image to all known peers
@@ -192,8 +189,6 @@ class Peer(threading.Thread):
 
             # get list of all active peers from server
             client_dict = self.get_active_peers()
-
-            print("RETRIEVED CLIENT DICT")
 
             self.handle_image(png, "Me")
 
@@ -308,6 +303,7 @@ class Peer(threading.Thread):
                 time.sleep(2.5)
 
             except Exception as e:
+                print("COULD NOT CONNECT TO SERVER: ")
                 print(e)
 
             finally:
@@ -583,6 +579,7 @@ if mode == 'LAN':
         pass
 
 print("IP INPUT BY USER: "+ip_input)
+
 # if user has entered a server, try to see if it responds and use it if it does
 if ip_input.strip(' ') != '' and server_ip != '127.0.0.1':
 
@@ -603,7 +600,7 @@ if ip_input.strip(' ') != '' and server_ip != '127.0.0.1':
 
     except Exception as e:
         print("COULD NOT CONNECT TO SERVER: "+server_ip)
-        # try to use localhost anyways
+        # try to use localhost port 9001 anyways
         server_ip = '127.0.0.1'
         pass
 

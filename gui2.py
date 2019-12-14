@@ -157,7 +157,7 @@ class Image_Display_GUI(threading.Thread):
         self.Listbox = Listbox(self.gui, width=35, height=30, bg="gray")
         self.Listbox.place(x=978, y=48)
         # button to delete an entry from the listbox
-        self.Button1 = ttk.Button(self.gui, text="Delete Message",
+        self.Button1 = tk.Button(self.gui, text="Delete Message",
                               command=self.delete_selected_msg)
         self.Button1.place(x=980, y=545)
 
