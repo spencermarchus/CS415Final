@@ -365,6 +365,10 @@ class Peer(threading.Thread):
             s.connect((self.server_ip, self.server_port))
             s.sendall(pickle.dumps(msg))
 
+        except Exception as e:
+            print(e)
+            pass
+
         finally:
             s.close()
 
@@ -394,6 +398,11 @@ class Peer(threading.Thread):
             return_data = pickle.loads(data)
 
             return return_data
+
+        except Exception as e:
+            print(e)
+            print("COULD NOT GET ACTIVE PEERS LIST FROM SERVER")
+            pass
 
         finally:
             s.close()

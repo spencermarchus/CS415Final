@@ -158,8 +158,8 @@ class Image_Display_GUI(threading.Thread):
         self.Listbox.place(x=978, y=48)
         # button to delete an entry from the listbox
         self.Button1 = tk.Button(self.gui, text="Delete Message",
-                              command=self.delete_selected_msg)
-        self.Button1.place(x=980, y=545)
+                              command=self.delete_selected_msg, width=28, height=3)
+        self.Button1.place(x=985, y=545)
 
         # start a thread which constantly watches for incoming messages and updates listbox/gui
         watcher = threading.Thread(target=self.watch_for_incoming_messages)

@@ -173,6 +173,10 @@ class Server(threading.Thread):
             print('\nPeer updated successfully!')
             print(self.clients)
 
+        except Exception as e:
+            print(e)
+            pass
+
         finally:
             # release lock
             self.client_dict_lock.release()
@@ -196,6 +200,13 @@ class Server(threading.Thread):
             # send dict to peer's socket
             response = pickle.dumps(return_list)
             peer_socket.sendall(response)
+
+
+        except Exception as e:
+
+            print(e)
+
+            pass
 
         finally:
 
